@@ -424,7 +424,7 @@
     const ca=s=>document.querySelector(s);
     const cameraDialog=ca('#cameraOverlay'),cameraLive=ca('#cameraLive'),cameraRecorded=ca('#cameraRecorded');
     const primary=ca('#cameraPrimary'),secondary=ca('#cameraSecondary'),cameraFileInput=ca('#cameraFile'),external=ca('#cameraExternal'),choose=ca('#cameraChoose'),fallback=ca('#cameraFallback'),loading=ca('#cameraLoading');
-    let cameraStream=null,cameraRecorder=null,cameraChunks=[],cameraFile=null,cameraObjectUrl=null,cameraTimer=null,cameraClockTimer=null,cameraStartedAt=0,cameraPriorFocus=null,cameraStage='idle',cameraSession=0;
+    let cameraStream=null,cameraRecorder=null,cameraChunks=[],cameraFile=null,cameraObjectUrl=null,cameraTimer=null,cameraClockTimer=null,cameraStartedAt=0,cameraPriorFocus=null,cameraStage='idle',cameraSession=0,cameraCaptureFailed=false;
     const phoneCapture=()=>/Android|iPhone|iPad|iPod|HarmonyOS|HUAWEI/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
     function cameraStatus(message=''){const el=ca('#cameraStatus');el.textContent=message;el.hidden=!message;}
     function cameraStageSet(stage){
@@ -463,7 +463,7 @@
     function openCameraSheet(){
       cameraPriorFocus=document.activeElement;
       cameraDialog.hidden=false;document.body.style.overflow='hidden';
-      cameraStageSet('idle');cameraStatus('');
+      cameraCaptureFailed=false;cameraStageSet('idle');cameraStatus('');
       cameraDialog.querySelector('#cameraClose').focus();
     }
     function closeCameraSheet(){
@@ -523,7 +523,7 @@
         stopCameraTracks();cameraStageSet('idle');
         cameraStatus(tt('Camera unavailable. Choose an existing video.','الكاميرا غير متاحة. اختر فيديو موجودًا.'));
         // Native chooser is not auto-opened after an async permission error.
-        primary.textContent=tt('Choose video','اختر فيديو');
+        cameraCaptureFailed=true;primary.textContent=tt('Choose video','اختر فيديو');
       }
     }
     function stopDesktopRecording(){
@@ -554,7 +554,7 @@
     primary.addEventListener('click',()=>{
       if(cameraStage==='review'){sendToBusiness();return;}
       if(cameraStage==='recording'){stopDesktopRecording();return;}
-      if(primary.textContent==='اختيار فيديو'||phoneCapture()){launchNativeCamera();return;}
+      if(cameraCaptureFailed||phoneCapture()){launchNativeCamera();return;}
       startDesktopRecording();
     });
     secondary.addEventListener('click',()=>{
