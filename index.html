@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
@@ -170,10 +170,15 @@
     .camera-fallback button,.camera-fallback a{padding:9px 12px;border-radius:10px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;font-weight:750;text-decoration:none;font-size:12px;cursor:pointer}
     .camera-loading{position:absolute;inset:0;background:rgba(6,30,72,.85);color:#fff;display:flex;align-items:center;justify-content:center;z-index:4;font-weight:750;font-size:14px}
     .camera-actions button{min-width:0}
+
+    .header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    #languageSwitcher{border:1px solid #b9d4f1;background:#fff;color:#0a408a;border-radius:12px;min-height:38px;font:700 13px system-ui,sans-serif;padding:6px 10px}
+    [dir="rtl"] .camera-brand,[dir="rtl"] .brand,[dir="rtl"] .petid-card-demo{direction:ltr}
+    @media(max-width:460px){.header-actions{gap:4px}.mini-label{display:none}#languageSwitcher{font-size:12px;min-height:36px;padding:4px 6px}}
   </style>
 </head>
 <body>
-  <div class="topbar"><div class="topinner"><div class="brand"><span class="brandicon">🐾</span> PawApp</div><div class="mini-label">Free pet games</div></div></div>
+  <div class="topbar"><div class="topinner"><div class="brand"><span class="brandicon">🐾</span> PawApp</div><div class="header-actions"><div class="mini-label">Free pet games</div><select id="languageSwitcher" aria-label="Language"><option value="en">English</option><option value="ar">العربية</option></select></div></div></div>
   <main class="layout" id="home">
     <section class="hero">
       <div class="hero-copy"><span class="eyebrow">هدية من دكتور بو</span><h1>Paw<span>Play</span></h1><h2 id="giftHeading">هدية مجانية لأليفك</h2><p>3 ألعاب تفاعلية للقطاوة والكلاب. العبوا وصوّروا اللحظة.</p></div>
@@ -281,6 +286,7 @@
   <script>
   (()=>{
     'use strict';
+    let language='en';const tt=(en,ar)=>language==='ar'?ar:en;
     const q=s=>document.querySelector(s), canvas=q('#board'),ctx=canvas.getContext('2d'),area=q('#area'),game=q('#gameView'),score=q('#score'),hint=q('#hint');
     let mode='',w=0,h=0,ratio=1,frameId=0,lastTime=0,ball=null,hits=0,audioCtx=null,soundOn=false,draw=false,color='#ffca25',marks=[],particles=[],bubbles=[],toastTimer=0,lastAutoSound=0,gameStartedAt=0,promoShown=false,promoBeforeFocus=null;
     const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
@@ -363,9 +369,9 @@
     const iosStore='https://apps.apple.com/kw/app/paw-app/id6474899820';
     const androidStore='https://play.google.com/store/apps/details?id=com.paw.customer';
     const details={
-      card:['كل بيانات أليفك الأساسية ببطاقة واحدة','اسمه، عمره، صورته، رقم المايكروشيب ومعلوماته الرئيسية في ملف رقمي مرتب.'],
-      health:['سجل صحي يحفظ زيارة بعد زيارة','مع اشتراك Medical Record، تقدر ترتب الزيارات والتطعيمات والتقارير والأشعة والملفات. إضافات العيادة تكون مميّزة عن بيانات صاحب الحيوان.'],
-      reminder:['أشياء مهمة ما تتوه بين الأوراق','تذكيرات التطعيم والمتابعة تساعدك ترتب احتياجات أليفك بدل ما تعتمد على الذاكرة وحدها.']
+      card:{en:['Digital pet ID','Identity, microchip and important details in one place.'],ar:['هوية رقمية للأليف','معلومات الأليف والمايكروشيب في بطاقة واحدة.']},
+      health:{en:['Medical history','Keep visits, vaccinations and reports with the medical subscription.'],ar:['السجل الطبي','احتفظ بالزيارات والتطعيمات والتقارير باشتراك السجل الطبي.']},
+      reminder:{en:['Vaccine reminders','Track upcoming vaccines and care.'],ar:['تذكيرات التطعيم','تابع مواعيد التطعيم والرعاية القادمة.']}
     };
     function showDiscover(){promoShown=true;promoBeforeFocus=document.activeElement;const modal=q('#discoverOverlay');modal.hidden=false;document.body.style.overflow='hidden';q('#closeDiscover').focus();}
     function hideDiscover(){q('#discoverOverlay').hidden=true;document.body.style.overflow='';if(promoBeforeFocus&&promoBeforeFocus.focus)promoBeforeFocus.focus();}
@@ -376,7 +382,7 @@
     q('#discoverOverlay').addEventListener('click',e=>{if(e.target.id==='discoverOverlay')hideDiscover();});
     q('#discoverOverlay').addEventListener('keydown',e=>{if(e.key==='Escape')hideDiscover();});
     q('#alreadyInstalled').addEventListener('click',()=>{q('#instructionPanel').hidden=!q('#instructionPanel').hidden;});
-    q('.discover-tabs').addEventListener('click',e=>{const b=e.target.closest('[data-discover]');if(!b)return;const key=b.dataset.discover,info=details[key];q('#discoverBody').replaceChildren();const t=document.createElement('strong'),d=document.createElement('p');t.textContent=info[0];d.textContent=info[1];q('#discoverBody').append(t,d);document.querySelectorAll('[data-discover]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-selected',String(x===b))});});
+    q('.discover-tabs').addEventListener('click',e=>{const b=e.target.closest('[data-discover]');if(!b)return;const key=b.dataset.discover,info=details[key][language];q('#discoverBody').replaceChildren();const t=document.createElement('strong'),d=document.createElement('p');t.textContent=info[0];d.textContent=info[1];q('#discoverBody').append(t,d);document.querySelectorAll('[data-discover]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-selected',String(x===b))});});
     q('#downloadApp').addEventListener('click',()=>{
       const ua=navigator.userAgent||'';
       if(/iPhone|iPad|iPod/i.test(ua)){window.open(iosStore,'_blank','noopener,noreferrer')}
@@ -387,12 +393,14 @@
     // Actual Pet ID must be created inside the existing PawApp app. This page has no access to private profile or records.
     // Static marketing links. No analytics, authentication, payments or sensitive user data.
     const params=new URLSearchParams(window.location.search);
-    const services={grooming:'الـGrooming',training:'التدريب',boarding:'الإقامة',daycare:'الرعاية اليومية',other:'خدماتنا'};
-    if(params.get('gift')==='booking'){
-      q('#bookingGift').hidden=false;
-      const label=services[params.get('service')]||'خدماتنا';
-      q('#giftService').textContent='شكرًا لأنك حجزت '+label+' عن طريق باو أب! دكتور بو يهدي أليفك ٣ ألعاب مجانية، جربوها بالبيت وشاركوا ردة فعله 💛';
-      q('#giftHeading').textContent='شكرًا لحجزك! هذي هدية أليفك 🎁';
+    const services={grooming:['grooming','العناية'],training:['training','التدريب'],boarding:['boarding','الإقامة'],daycare:['daycare','الرعاية'],other:['our services','خدماتنا']};
+    function updateBookingGift(){
+      const active=params.get('gift')==='booking';
+      q('#bookingGift').hidden=!active;if(!active)return;
+      const srv=services[params.get('service')]||services.other;
+      const name=srv[language==='ar'?1:0];
+      q('#giftService').textContent=tt('Thanks for booking '+name+' with PawApp. Enjoy three free games!','شكرًا لحجز '+name+' مع باو أب. هديتك 3 ألعاب مجانية!');
+      q('#giftHeading').textContent=tt('A gift for your pet','هدية لأليفك');
     }
     q('#sharePlay').addEventListener('click',async()=>{
       const url=new URL(window.location.href);
@@ -422,8 +430,8 @@
     function cameraStageSet(stage){
       cameraStage=stage;
       secondary.hidden=stage!=='review';choose.hidden=stage==='review'||stage==='recording';fallback.hidden=true;
-      primary.textContent=stage==='review'?'Share video':stage==='recording'?'Stop recording':'Record video';
-      ca('#cameraHint').textContent=stage==='review'?'Select WhatsApp, then PawApp (+965 41117003), and send your video.':stage==='recording'?'Tap Stop or finish after 20 seconds.':'Preview before sharing.';
+      primary.textContent=stage==='review'?tt('Share video','شارك الفيديو'):stage==='recording'?tt('Stop recording','إيقاف التسجيل'):tt('Record video','صوّر فيديو');
+      ca('#cameraHint').textContent=stage==='review'?tt('Choose WhatsApp, then PawApp (+965 41117003).','اختر واتساب ثم PawApp (+965 41117003).'):stage==='recording'?tt('Stop or finish after 20 seconds.','أوقف التسجيل أو ينتهي بعد 20 ثانية.'):tt('Preview before sharing.','شاهد الفيديو قبل المشاركة.');
       ca('#cameraRecordingTag').hidden=stage!=='recording';
     }
     function stopCameraTracks(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}cameraLive.srcObject=null;}
@@ -565,6 +573,29 @@
       showVideoFile(file);
     });
 
+
+    const staticTexts=[[".mini-label","Free pet games","ألعاب مجانية"],[".hero-copy .eyebrow","A gift from Dr. Bo","هدية من دكتور بو"],["#giftHeading","Free games for your pet","ألعاب مجانية لأليفك"],[".hero-copy p","Three games. Play, record and share.","ثلاث ألعاب. العب، صوّر وشارك."],["#bookingGift .gift-blurb strong","Thank you for booking!","شكرًا لحجزك!"],[".share-strip strong","PawPlay Challenge","تحدي PawPlay"],[".share-strip p","Capture your pet’s reaction.","صوّر ردة فعل أليفك."],["#openCamera","Record your pet","صوّر أليفك"],["#sharePlay","Share games","شارك الألعاب"],[".tablet-note","Play on any screen","تعمل على جميع الشاشات"],[".gift h3","Choose a game","اختر لعبة"],[".gift p","Free to play. Sound is optional.","اللعب مجاني. الصوت اختياري."],[".chasevisual + .details h4","Paw Chase","Paw Chase"],[".chasevisual + .details p","Chase the moving ball.","طارد الكرة المتحركة."],["#goChase","Play now","العب الآن"],[".artvisual + .details h4","Paw Art","Paw Art"],[".artvisual + .details p","Paint with every touch.","ارسم مع كل لمسة."],["#goArt","Play now","العب الآن"],[".newbadge","New","جديد"],[".popvisual + .details h4","Paw Pop","Paw Pop"],[".popvisual + .details p","Pop colorful bubbles.","فرقّع الفقاعات الملوّنة."],["#goPop","Play now","العب الآن"],[".petid-eyebrow","From PawApp","من باو أب"],[".petid-intro p","Digital ID, reminders and medical records in the PawApp app.","بطاقة رقمية، تذكيرات وسجل طبي داخل تطبيق باو أب."],["#petidDiscover","Explore Pet ID","اكتشف Pet ID"],["#howToFind","Already have the app?","عندك التطبيق؟"],[".demo-label","Demo only","نموذج توضيحي"],[".foot > div:first-of-type","Free games by PawApp. No sign-up required.","ألعاب مجانية من باو أب. بدون تسجيل."],[".foot .note","Keep your pet supervised. Start with low volume and stop if they seem uncomfortable.","راقب أليفك أثناء اللعب. ابدأ بصوت منخفض وأوقفه إذا انزعج."],[".foot a","PawApp website","موقع باو أب"],["#back","Close","إغلاق"],["#fullscreenToggle","Full screen","ملء الشاشة"],["#score","Touches: 0","اللمسات: 0"],["#hint","Tap the moving target","المس الهدف المتحرك"],["#chaseTools label[for=target]","Target","الهدف"],["#chaseTools label[for=speed]","Speed","السرعة"],["#target option[value=ball]","Ball","كرة"],["#target option[value=fish]","Fish","سمچة"],["#target option[value=butterfly]","Butterfly","فراشة"],["#speed option[value='0.7']","Slow","هادئة"],["#speed option[value='1.2']","Medium","متوسطة"],["#speed option[value='2']","Fast","سريعة"],["#restart","Restart","إعادة"],["#soundTools label[for=petType]","Pet","الأليف"],["#petType option[value=dog]","Dog","كلب"],["#petType option[value=cat]","Cat","قطوة"],["#soundTools label[for=soundType]","Sound","الصوت"],["#soundType option[value=squeak]","Toy squeak","صرير لعبة"],["#soundType option[value=chirp]","Bird chirp","زقزقة"],["#soundType option[value=pop]","Pop","فرقعة"],["#soundType option[value=whistle]","Gentle whistle","صفارة لطيفة"],["#soundTools label[for=volume]","Volume","مستوى الصوت"],["#soundTest","Test sound","جرّب الصوت"],["#popTools label[for=bubbleSpeed]","Motion","الحركة"],["#bubbleSpeed option[value='.65']","Slow","هادئة"],["#bubbleSpeed option[value='1']","Normal","عادية"],["#bubbleSpeed option[value='1.35']","Fast","سريعة"],["#restartPop","Restart","إعادة"],["#clearArt","Clear","مسح"],["#saveArt","Save artwork","حفظ اللوحة"],[".discover-tag","Pet ID by PawApp","Pet ID من باو أب"],[".discover-overlay .discover-sheet > p","Your pet’s health details, all in one place.","معلومات أليفك الصحية في مكان واحد."],[".discover-tab[data-discover=card]","Digital ID","بطاقة رقمية"],[".discover-tab[data-discover=health]","Medical history","السجل الطبي"],[".discover-tab[data-discover=reminder]","Reminders","التذكيرات"],[".discover-instruction","Create your Pet ID inside the PawApp app. Fees may apply.","إنشاء Pet ID من داخل تطبيق باو أب. قد تطبق رسوم."],["#downloadApp","Download PawApp","حمّل باو أب"],["#alreadyInstalled","Already installed?","عندك التطبيق؟"],["#keepPlaying","Keep playing","كمل اللعب"],["#cameraHeading","Record your pet","صوّر أليفك"],[".camera-subtitle","Record 10–20 seconds, or choose a video.","صوّر 10–20 ثانية أو اختر فيديو."],["#cameraPlaceholder span","Ready to record","جاهز للتصوير"],["#cameraSecondary","Retake","إعادة التصوير"],["#cameraChoose","Choose video","اختر فيديو"],["#cameraPrimary","Record video","صوّر فيديو"],["#cameraFallbackText","Can't share the file? Save it and attach in WhatsApp.","إذا المشاركة غير متاحة، احفظ الفيديو وأرفقه في واتساب."],["#cameraSave","Save video","حفظ الفيديو"],["#cameraChat","PawApp WhatsApp","واتساب باو أب"],["#cameraHint","Preview before sharing.","شاهد الفيديو قبل المشاركة."],[".camera-consent","We ask permission before reposting your video.","نطلب الإذن قبل نشر الفيديو."],["#cameraRecordingLabel","Recording","جاري التسجيل"],["#cameraLoading","Preparing video…","جاري تجهيز الفيديو…"]];
+    const richTexts=[[".petid-intro h3","Your pet’s info, <em>all in one place</em>","معلومات أليفك <em>في مكان واحد</em>"],["#discoverTitle","Meet <span>Pet ID</span>","تعرّف على <span>Pet ID</span>"],["#instructionPanel","Open PawApp → Account → Your Pets → Pet ID.","افتح باو أب ← الحساب ← حيواناتك ← Pet ID."],["#huaweiNote","PawPlay runs in your browser. PawApp app availability depends on your device’s store.","PawPlay يعمل بالمتصفح. توفر تطبيق باو أب يعتمد على متجر جهازك."]];
+    function applyLanguage(next){
+      language=next==='ar'?'ar':'en';
+      document.documentElement.lang=language;
+      document.documentElement.dir=language==='ar'?'rtl':'ltr';
+      q('#languageSwitcher').value=language;
+      document.title=tt('PawPlay by PawApp — Free pet games','PawPlay من باو أب — ألعاب مجانية');
+      for(const [selector,en,ar] of staticTexts){const el=q(selector);if(el)el.textContent=tt(en,ar)}
+      for(const [selector,en,ar] of richTexts){const el=q(selector);if(el)el.innerHTML=tt(en,ar)}
+      q('#soundEnable').textContent=soundOn?tt('Sound on','الصوت شغال'):tt('Sound off','الصوت مغلق');
+      q('#score').textContent=(mode==='pop'?tt('Bubbles: ','فقاعات: '):tt('Touches: ','اللمسات: '))+hits;
+      const tab=q('.discover-tab.active');const key=tab?.dataset.discover||'card';
+      const v=details[key][language];const content=q('#discoverBody');content.replaceChildren();
+      const h=document.createElement('strong'),p=document.createElement('p');h.textContent=v[0];p.textContent=v[1];content.append(h,p);
+      cameraStageSet(cameraStage);
+      updateBookingGift();
+      try{localStorage.setItem('pawplay-language',language)}catch(e){}
+    }
+    q('#languageSwitcher').addEventListener('change',e=>applyLanguage(e.target.value));
+    let first='en';try{first=localStorage.getItem('pawplay-language')||'en'}catch(e){}
+    applyLanguage(first);
     window.addEventListener('resize',()=>{if(mode)resize()});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&mode)close()});
     document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode){cancelAnimationFrame(frameId)}else if(!document.hidden&&(mode==='chase'||mode==='pop')){lastTime=0;frameId=requestAnimationFrame(loop)}});
   })();
