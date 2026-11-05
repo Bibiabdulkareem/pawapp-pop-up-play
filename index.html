@@ -195,6 +195,28 @@
     #gameView.focus-mode .focus-exit{display:flex}
     #focusExit[hidden]{display:none!important}
     #gameView:fullscreen{height:100%!important;max-height:none!important}
+
+    .live-tap-badge{position:absolute;top:13px;right:13px;background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.8);border-radius:14px;min-width:68px;display:flex;align-items:center;gap:7px;justify-content:center;padding:7px 11px;color:#12539d;font-size:12px;font-weight:850;box-shadow:0 4px 15px #06235330;pointer-events:none}
+    .live-tap-badge strong{font-size:23px;line-height:1;font-variant-numeric:tabular-nums}
+    [dir="rtl"] .live-tap-badge{right:auto;left:13px}
+    #gameView.focus-mode .live-tap-badge{top:calc(13px + env(safe-area-inset-top));right:auto;left:13px}
+    .challenge-overlay{position:fixed;inset:0;z-index:180;background:rgba(7,25,66,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+    .challenge-overlay[hidden]{display:none!important}
+    .challenge-sheet{width:min(420px,100%);position:relative;background:#fff;border-radius:24px;padding:30px 22px 24px;color:#0e3d81;text-align:center;box-shadow:0 18px 60px #00183248}
+    .challenge-x{position:absolute;top:13px;inset-inline-end:13px;width:34px;height:34px;border-radius:50%;border:0;background:#edf5ff;color:#124a92;font-size:19px;cursor:pointer}
+    .challenge-kicker{font-size:12px;letter-spacing:.04em;color:#3279c7;font-weight:900}
+    .challenge-sheet h2{font-size:clamp(24px,6vw,30px);margin:11px 0 13px;line-height:1.2}
+    .challenge-score{border:1px solid #d5e8fb;background:#f0f7ff;border-radius:18px;padding:16px;margin:8px auto 15px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px}
+    .challenge-score span{font-weight:800;font-size:14px;color:#547ba6}
+    .challenge-score strong{font-size:56px;font-weight:1000;line-height:1;color:#10509e;font-variant-numeric:tabular-nums}
+    .challenge-sheet p{font-size:14px;color:#4f6d90;line-height:1.5;margin:0 0 18px}
+    .challenge-sheet .challenge-primary{width:100%;min-height:52px;margin-bottom:9px}
+    .challenge-later{display:block;margin:0 auto;background:transparent;border:0;color:#3b6ba2;font-weight:800;font-size:13px;padding:10px 18px;cursor:pointer}
+    .challenge-sheet p.challenge-disclaimer{font-size:11px;color:#8b9aaf;margin:9px 0 0}
+    .camera-score-chip{display:flex;align-items:center;justify-content:center;gap:10px;padding:7px 12px;border-radius:13px;background:#e9f5ff;color:#0d4d96;width:min(100%,800px);align-self:center;font-weight:850;font-size:13px;margin:9px auto 0;flex:0 0 auto}
+    .camera-score-chip[hidden]{display:none!important}
+    .camera-score-chip strong{font-size:20px;font-variant-numeric:tabular-nums}
+    @media(max-height:630px){.camera-score-chip{margin-top:4px;padding:4px 8px}}
   </style>
 </head>
 <body>
@@ -237,7 +259,7 @@
   <div id="gameView" role="dialog" aria-modal="true" aria-label="لعبة باو بلاي">
     <div class="gametop"><button class="smallbutton" id="back">✕ رجوع</button><button class="smallbutton" id="fullscreenToggle" type="button" title="تكبير مساحة اللعب">⛶ ملء الشاشة</button><h5 id="activeTitle">PawPlay</h5><div class="grow"></div><span class="score" id="score">لمسات: 0</span></div>
     <button type="button" id="focusExit" class="focus-exit" hidden aria-label="Exit expanded play mode">✕ <span id="focusExitLabel">Exit</span></button>
-    <div class="gamearea" id="area"><canvas id="board" aria-label="مساحة اللعبة التفاعلية"></canvas><div class="gamehint" id="hint">المسي الهدف الأصفر 🟡</div></div>
+    <div class="gamearea" id="area"><canvas id="board" aria-label="مساحة اللعبة التفاعلية"></canvas><div class="gamehint" id="hint">المسي الهدف الأصفر 🟡</div><div id="liveTapBadge" class="live-tap-badge"><span id="liveTapLabel">Taps</span><strong id="liveTapCount">0</strong></div></div>
     <div class="gamebottom" id="chaseTools"><label for="target">الهدف</label><select id="target" aria-label="اختيار الهدف"><option value="ball" selected>🎾 كرة</option><option value="fish">🐟 سمچة</option><option value="butterfly">🦋 فراشة</option></select><label for="speed">السرعة</label><select id="speed" aria-label="السرعة"><option value="0.7" selected>هادئة</option><option value="1.2">متوسطة</option><option value="2">سريعة</option></select><button class="smallbutton" id="restart">↻ إعادة</button></div>
     <div class="gamebottom soundcontrols hidden" id="soundTools">
       <label for="petType">الأليف</label><select id="petType" aria-label="نوع الأليف"><option value="dog">🐶 كلب</option><option value="cat">🐱 قطوة</option></select>
@@ -247,6 +269,18 @@
     </div>
     <div class="gamebottom hidden" id="popTools"><label for="bubbleSpeed">الحركة</label><select id="bubbleSpeed"><option value=".65">هادئة</option><option value="1" selected>عادية</option><option value="1.35">أسرع</option></select><button class="smallbutton" type="button" id="restartPop">↻ إعادة</button></div>
     <div class="gamebottom hidden" id="artTools"><div class="colors" id="colors"><button type="button" class="colorbutton selected" aria-label="أصفر" data-color="#ffca25" style="background:#ffca25"></button><button type="button" class="colorbutton" aria-label="أزرق" data-color="#2a94e9" style="background:#2a94e9"></button><button type="button" class="colorbutton" aria-label="وردي" data-color="#fc59a1" style="background:#fc59a1"></button><button type="button" class="colorbutton" aria-label="أخضر" data-color="#48ca95" style="background:#48ca95"></button></div><button class="smallbutton" id="clearArt">🗑 جديد</button><button class="button" id="saveArt">⬇ حفظ اللوحة</button></div>
+  </div>
+  <div id="challengeOverlay" class="challenge-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="challengeHeading">
+    <div class="challenge-sheet">
+      <button type="button" class="challenge-x" id="challengeClose" aria-label="Close">✕</button>
+      <span class="challenge-kicker">PawPlay Challenge</span>
+      <h2 id="challengeHeading">Great job!</h2>
+      <div class="challenge-score"><span id="challengeScoreLabel">Your pet's taps</span><strong id="challengeScore">0</strong></div>
+      <p id="challengeDescription">Want to join the challenge? Film your pet playing!</p>
+      <button type="button" class="button challenge-primary" id="challengeJoin">Join the challenge</button>
+      <button type="button" class="challenge-later" id="challengeLater">Not now</button>
+      <p class="challenge-disclaimer" id="challengeDisclaimer">Competition details and prizes coming later.</p>
+    </div>
   </div>
   <div class="discover-overlay" id="discoverOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="discoverTitle">
     <div class="discover-sheet">
@@ -289,6 +323,7 @@
         <video id="cameraRecorded" controls playsinline preload="metadata" hidden></video>
         <span id="cameraRecordingTag" class="camera-recording-tag" hidden><span id="cameraRecordingLabel">Recording</span> · <span id="cameraClock">0:00</span></span><div id="cameraLoading" class="camera-loading" hidden role="status">Preparing video…</div>
       </div>
+      <div id="cameraScoreChip" class="camera-score-chip" hidden><span id="cameraScoreLabel">Game taps</span><strong id="cameraScoreValue">0</strong></div>
       <div class="camera-status" id="cameraStatus" role="status" aria-live="polite" hidden></div>
       <div class="camera-actions">
         <button type="button" class="camera-secondary" id="cameraSecondary" hidden>Retake</button>
@@ -315,14 +350,21 @@
     let language='en';const tt=(en,ar)=>language==='ar'?ar:en;
     const q=s=>document.querySelector(s), canvas=q('#board'),ctx=canvas.getContext('2d'),area=q('#area'),game=q('#gameView'),score=q('#score'),hint=q('#hint');
     let mode='',w=0,h=0,ratio=1,frameId=0,lastTime=0,ball=null,hits=0,audioCtx=null,soundOn=false,draw=false,color='#ffca25',marks=[],particles=[],bubbles=[],toastTimer=0,lastAutoSound=0,gameStartedAt=0,promoShown=false,promoBeforeFocus=null;
+    let lastChallengeScore=null,lastChallengeGame='',challengePriorFocus=null;
     const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
     function toast(text){const e=q('#toast');e.textContent=text;e.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('show'),2300)}
     function resize(){const r=area.getBoundingClientRect(),oldW=w,oldH=h;w=Math.max(1,r.width);h=Math.max(1,r.height);ratio=Math.max(.8,Math.min(window.devicePixelRatio||1,2,Math.sqrt(3500000/(w*h))));canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);if(mode==='art')renderArt();if(ball){ball.r=clamp(Math.min(w,h)*.09,35,w>=700?79:56);ball.x=clamp(oldW>1?ball.x*w/oldW:ball.x,ball.r,w-ball.r);ball.y=clamp(oldH>1?ball.y*h/oldH:ball.y,ball.r,h-ball.r)}if(mode==='pop'&&oldW>1&&oldH>1){bubbles.forEach(b=>{b.x=b.x*w/oldW;b.y=b.y*h/oldH;b.r=clamp(Math.min(w,h)*.088,29,w>=700?67:53)})}}
-    function open(type){cancelAnimationFrame(frameId);gameStartedAt=Date.now();mode=type;game.classList.add('on');document.body.style.overflow='hidden';q('#activeTitle').textContent=type==='chase'?'Paw Chase':type==='art'?'Paw Art':'Paw Pop';q('#chaseTools').classList.toggle('hidden',type!=='chase');q('#artTools').classList.toggle('hidden',type!=='art');q('#popTools').classList.toggle('hidden',type!=='pop');q('#soundTools').classList.toggle('hidden',type==='art');hint.textContent=type==='chase'?tt('Follow the ball','اتبع الكرة'):type==='art'?tt('Touch to paint','المس للرسم'):tt('Pop the bubbles','فرقّع الفقاعات');hint.style.display='block';setTimeout(()=>{if(game.classList.contains('on'))hint.style.display='none'},3600);resize();if(type==='chase')resetChase();else if(type==='art'){marks=[];hits=0;score.textContent=tt('Touches: 0','اللمسات: 0');renderArt()}else resetPop()}
-    function close(){const elapsed=Date.now()-gameStartedAt,wasPlayed=hits>0||elapsed>12000;leaveFocusMode();game.classList.remove('on');document.body.style.overflow='';mode='';cancelAnimationFrame(frameId);if(wasPlayed&&!promoShown){promoShown=true;showDiscover()}}
-    function resetChase(){hits=0;score.textContent=tt('Touches: 0','اللمسات: 0');const r=clamp(Math.min(w,h)*.09,35,w>=700?79:56);ball={x:w*.5,y:h*.52,vx:1.55,vy:1.15,r,rotation:0};particles=[];lastTime=0;cancelAnimationFrame(frameId);frameId=requestAnimationFrame(loop)}
+    function updateTapBadge(){q('#liveTapCount').textContent=String(hits);}
+    function open(type){cancelAnimationFrame(frameId);gameStartedAt=Date.now();mode=type;game.classList.add('on');document.body.style.overflow='hidden';q('#activeTitle').textContent=type==='chase'?'Paw Chase':type==='art'?'Paw Art':'Paw Pop';q('#chaseTools').classList.toggle('hidden',type!=='chase');q('#artTools').classList.toggle('hidden',type!=='art');q('#popTools').classList.toggle('hidden',type!=='pop');q('#soundTools').classList.toggle('hidden',type==='art');hint.textContent=type==='chase'?tt('Follow the ball','اتبع الكرة'):type==='art'?tt('Touch to paint','المس للرسم'):tt('Pop the bubbles','فرقّع الفقاعات');hint.style.display='block';setTimeout(()=>{if(game.classList.contains('on'))hint.style.display='none'},3600);resize();if(type==='chase')resetChase();else if(type==='art'){marks=[];hits=0;updateTapBadge();score.textContent=tt('Touches: 0','اللمسات: 0');renderArt()}else resetPop()}
+    function close(){
+      const wasPlayed=hits>0;
+      if(wasPlayed){lastChallengeScore=hits;lastChallengeGame=mode;}
+      leaveFocusMode();game.classList.remove('on');document.body.style.overflow='';mode='';cancelAnimationFrame(frameId);
+      if(wasPlayed)showChallenge();
+    }
+    function resetChase(){hits=0;updateTapBadge();score.textContent=tt('Touches: 0','اللمسات: 0');const r=clamp(Math.min(w,h)*.09,35,w>=700?79:56);ball={x:w*.5,y:h*.52,vx:1.55,vy:1.15,r,rotation:0};particles=[];lastTime=0;cancelAnimationFrame(frameId);frameId=requestAnimationFrame(loop)}
     function newBubble(inView=true){let r=clamp(Math.min(w,h)*(.07+Math.random()*.038),26,w>=700?68:53);return {x:r+Math.random()*Math.max(1,w-2*r),y:inView?r+Math.random()*Math.max(1,h-2*r):h+r+Math.random()*h*.25,vx:(Math.random()-.5)*.55,vy:-.35-Math.random()*.55,r,hue:[195,44,303,160,205][Math.floor(Math.random()*5)],phase:Math.random()*6.28}}
-    function resetPop(){hits=0;score.textContent=tt('Bubbles: 0','فقاعات: 0');particles=[];bubbles=Array.from({length:w<420?6:w<700?9:Math.min(17,Math.max(10,Math.round(w*h/65000)))},()=>newBubble());lastTime=0;lastAutoSound=0;cancelAnimationFrame(frameId);frameId=requestAnimationFrame(loop)}
+    function resetPop(){hits=0;updateTapBadge();score.textContent=tt('Bubbles: 0','فقاعات: 0');particles=[];bubbles=Array.from({length:w<420?6:w<700?9:Math.min(17,Math.max(10,Math.round(w*h/65000)))},()=>newBubble());lastTime=0;lastAutoSound=0;cancelAnimationFrame(frameId);frameId=requestAnimationFrame(loop)}
     function audioReady(){try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx}catch(e){toast(tt('Sound is not supported here','الصوت غير مدعوم هنا'));return null}}
     function tone(start,duration,frequency,end,type,vol,when=0){
       const a=audioReady();if(!a)return;
@@ -368,9 +410,9 @@
     function stamp(x,y){const r=clamp(Math.min(w,h)*.047,17,34);for(let i=0;i<6;i++){const dx=i===0?0:(Math.random()-.5)*r*2.6,dy=i===0?0:(Math.random()-.5)*r*2.6;marks.push({x:(x+dx)/w,y:(y+dy)/h,r:i===0?r:3+Math.random()*r*.48,c:color,a:i===0?.6:.44+Math.random()*.4})}if(marks.length>2200)marks.splice(0,200);renderArt()}
     function point(e){const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}}
     canvas.addEventListener('pointerdown',e=>{if(!mode)return;e.preventDefault();try{canvas.setPointerCapture(e.pointerId)}catch(err){}const p=point(e);
-      if(mode==='chase'){if(ball&&Math.hypot(p.x-ball.x,p.y-ball.y)<ball.r+38){hits++;score.textContent=tt('Touches: ','اللمسات: ')+hits;playSound();burst(ball.x,ball.y,48);ball.x=ball.r+Math.random()*Math.max(1,w-2*ball.r);ball.y=ball.r+Math.random()*Math.max(1,h-2*ball.r);ball.vx=-ball.vx}}
-      else if(mode==='pop'){const index=bubbles.findIndex(b=>Math.hypot(p.x-b.x,p.y-b.y)<b.r+18);if(index>=0){const b=bubbles[index];hits++;score.textContent=tt('Bubbles: ','فقاعات: ')+hits;burst(b.x,b.y,b.hue);playSound();bubbles[index]=newBubble(false)}}
-      else{draw=true;hits++;score.textContent=tt('Touches: ','اللمسات: ')+hits;stamp(p.x,p.y)}});
+      if(mode==='chase'){if(ball&&Math.hypot(p.x-ball.x,p.y-ball.y)<ball.r+38){hits++;updateTapBadge();score.textContent=tt('Touches: ','اللمسات: ')+hits;playSound();burst(ball.x,ball.y,48);ball.x=ball.r+Math.random()*Math.max(1,w-2*ball.r);ball.y=ball.r+Math.random()*Math.max(1,h-2*ball.r);ball.vx=-ball.vx}}
+      else if(mode==='pop'){const index=bubbles.findIndex(b=>Math.hypot(p.x-b.x,p.y-b.y)<b.r+18);if(index>=0){const b=bubbles[index];hits++;updateTapBadge();score.textContent=tt('Bubbles: ','فقاعات: ')+hits;burst(b.x,b.y,b.hue);playSound();bubbles[index]=newBubble(false)}}
+      else{draw=true;hits++;updateTapBadge();score.textContent=tt('Touches: ','اللمسات: ')+hits;stamp(p.x,p.y)}});
     canvas.addEventListener('pointermove',e=>{if(mode!=='art'||!draw)return;e.preventDefault();const p=point(e);stamp(p.x,p.y)});
     ['pointerup','pointercancel','lostpointercapture'].forEach(evt=>canvas.addEventListener(evt,()=>{draw=false}));
 
@@ -419,7 +461,7 @@
     q('#soundTest').addEventListener('click',()=>{audioReady();playSound(true)});
     q('#volume').addEventListener('input',()=>{q('#volumeValue').textContent=q('#volume').value+'%'});
     q('#colors').addEventListener('click',e=>{const b=e.target.closest('[data-color]');if(!b)return;color=b.dataset.color;q('#colors').querySelectorAll('.colorbutton').forEach(x=>x.classList.toggle('selected',x===b))});
-    q('#clearArt').addEventListener('click',()=>{marks=[];hits=0;score.textContent=tt('Touches: 0','اللمسات: 0');renderArt()});
+    q('#clearArt').addEventListener('click',()=>{marks=[];hits=0;updateTapBadge();score.textContent=tt('Touches: 0','اللمسات: 0');renderArt()});
     q('#saveArt').addEventListener('click',()=>{if(mode!=='art')return;const a=document.createElement('a');a.download='PawArt-by-PawApp.png';a.href=canvas.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove();toast(tt('Artwork ready to save','اللوحة جاهزة للحفظ'))});
 
     // Pet ID campaign: optional product education AFTER leaving gameplay, never interrupt the pet.
@@ -430,6 +472,29 @@
       health:{en:['Medical history','Keep visits, vaccinations and reports with the medical subscription.'],ar:['السجل الطبي','احتفظ بالزيارات والتطعيمات والتقارير باشتراك السجل الطبي.']},
       reminder:{en:['Vaccine reminders','Track upcoming vaccines and care.'],ar:['تذكيرات التطعيم','تابع مواعيد التطعيم والرعاية القادمة.']}
     };
+    function renderChallengeScore(){
+      const value=lastChallengeScore===null?'—':String(lastChallengeScore);
+      q('#challengeScore').textContent=value;
+      q('#cameraScoreValue').textContent=value;
+      q('#cameraScoreChip').hidden=lastChallengeScore===null;
+    }
+    function showChallenge(){
+      renderChallengeScore();
+      challengePriorFocus=document.activeElement;
+      q('#challengeOverlay').hidden=false;
+      document.body.style.overflow='hidden';
+      q('#challengeJoin').focus();
+    }
+    function hideChallenge(){
+      q('#challengeOverlay').hidden=true;
+      document.body.style.overflow='';
+      if(challengePriorFocus?.focus)challengePriorFocus.focus();
+    }
+    q('#challengeJoin').addEventListener('click',()=>{hideChallenge();openCameraSheet()});
+    q('#challengeLater').addEventListener('click',hideChallenge);
+    q('#challengeClose').addEventListener('click',hideChallenge);
+    q('#challengeOverlay').addEventListener('click',e=>{if(e.target.id==='challengeOverlay')hideChallenge()});
+    q('#challengeOverlay').addEventListener('keydown',e=>{if(e.key==='Escape')hideChallenge()});
     function showDiscover(){promoShown=true;promoBeforeFocus=document.activeElement;const modal=q('#discoverOverlay');modal.hidden=false;document.body.style.overflow='hidden';q('#closeDiscover').focus();}
     function hideDiscover(){q('#discoverOverlay').hidden=true;document.body.style.overflow='';if(promoBeforeFocus&&promoBeforeFocus.focus)promoBeforeFocus.focus();}
     q('#petidDiscover').addEventListener('click',showDiscover);
@@ -521,6 +586,7 @@
       cameraStageSet('review');cameraStatus('');
     }
     function openCameraSheet(){
+      renderChallengeScore();
       cameraPriorFocus=document.activeElement;
       cameraDialog.hidden=false;document.body.style.overflow='hidden';
       cameraCaptureFailed=false;cameraStageSet('idle');cameraStatus('');
@@ -589,10 +655,13 @@
     function stopDesktopRecording(){
       if(cameraRecorder?.state==='recording'){cameraStatus(tt('Preparing video…','جاري تجهيز الفيديو…'));cameraRecorder.stop();}
     }
+    function challengeScoreCaption(){
+      return lastChallengeScore===null?'':tt(' '+lastChallengeScore+' taps!',' '+lastChallengeScore+' لمسة!');
+    }
     function pawPlayCaption(){
       return tt(
-        "🐾 #PawPlayChallenge by PawApp — Here's my pet's reaction!",
-        "🐾 #PawPlayChallenge من PawApp — هذي ردة فعل أليفي!"
+        "🐾 #PawPlayChallenge by PawApp — My pet's reaction!"+challengeScoreCaption(),
+        "🐾 #PawPlayChallenge من PawApp — ردة فعل أليفي!"+challengeScoreCaption()
       );
     }
     function updateBusinessChatLinks(){
@@ -608,8 +677,8 @@
       const mention=platform==='instagram'?PAWAPP_INSTAGRAM_HANDLE:PAWAPP_TIKTOK_HANDLE;
       const postfix=mention?' '+mention:'';
       return tt(
-        "PawPlay Challenge by PawApp! My pet's reaction 🐾"+postfix+" #PawPlayChallenge #PawApp",
-        "تحدي PawPlay من PawApp! شوفوا ردة فعل أليفي 🐾"+postfix+" #PawPlayChallenge #PawApp"
+        "PawPlay Challenge 🐾"+challengeScoreCaption()+postfix+" #PawPlayChallenge #PawApp",
+        "تحدي PawPlay 🐾"+challengeScoreCaption()+postfix+" #PawPlayChallenge #PawApp"
       );
     }
     async function copySocialCaption(platform=lastSocialTarget){
@@ -698,6 +767,15 @@
       q('#soundEnable').textContent=soundOn?tt('Sound on','الصوت شغال'):tt('Sound off','الصوت مغلق');
       updateFocusLabels();
       q('#score').textContent=(mode==='pop'?tt('Bubbles: ','فقاعات: '):tt('Touches: ','اللمسات: '))+hits;
+      q('#liveTapLabel').textContent=tt('Taps','لمسات');
+      q('#challengeHeading').textContent=tt('Great job!','برافو!');
+      q('#challengeScoreLabel').textContent=tt("Your pet's taps","لمسات أليفك");
+      q('#challengeDescription').textContent=tt('Want to join the challenge? Film your pet playing!','تبي تدخل التحدي؟ صوّر أليفك وهو يلعب!');
+      q('#challengeJoin').textContent=tt('Join the challenge','شارك بالتحدي');
+      q('#challengeLater').textContent=tt('Not now','مو الحين');
+      q('#challengeDisclaimer').textContent=tt('Competition details and prizes coming later.','تفاصيل المسابقة والجوائز نعلنها لاحقًا.');
+      q('#cameraScoreLabel').textContent=tt('Game taps','لمسات اللعبة');
+      renderChallengeScore();
       const tab=q('.discover-tab.active');const key=tab?.dataset.discover||'card';
       const v=details[key][language];const content=q('#discoverBody');content.replaceChildren();
       const h=document.createElement('strong'),p=document.createElement('p');h.textContent=v[0];p.textContent=v[1];content.append(h,p);
