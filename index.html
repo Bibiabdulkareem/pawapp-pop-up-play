@@ -177,6 +177,17 @@
     #languageSwitcher{border:1px solid #b9d4f1;background:#fff;color:#0a408a;border-radius:12px;min-height:38px;font:700 13px system-ui,sans-serif;padding:6px 10px}
     [dir="rtl"] .camera-brand,[dir="rtl"] .brand,[dir="rtl"] .petid-card-demo{direction:ltr}
     @media(max-width:460px){.header-actions{gap:4px}.mini-label{display:none}#languageSwitcher{font-size:12px;min-height:36px;padding:4px 6px}}
+
+    /* iPhone Safari: native element fullscreen is unavailable.
+       Expand the playable canvas to the whole visible browser viewport instead. */
+    #gameView.on{height:100vh;height:100dvh;max-height:100dvh;top:0;bottom:auto}
+    #gameView.focus-mode .gametop,#gameView.focus-mode .gamebottom{display:none!important}
+    #gameView.focus-mode .gamearea{flex:1 1 auto;min-height:0;height:100%;width:100%}
+    #gameView.focus-mode .gamehint{display:none!important}
+    .focus-exit{display:none;position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px));z-index:45;align-items:center;justify-content:center;gap:6px;border:1px solid #c5d9ee;border-radius:99px;padding:8px 13px;background:rgba(255,255,255,.94);color:#0b438a;font-weight:850;font-size:13px;box-shadow:0 4px 18px #042c5950;min-height:38px}
+    #gameView.focus-mode .focus-exit{display:flex}
+    #focusExit[hidden]{display:none!important}
+    #gameView:fullscreen{height:100%!important;max-height:none!important}
   </style>
 </head>
 <body>
@@ -218,6 +229,7 @@
   </main>
   <div id="gameView" role="dialog" aria-modal="true" aria-label="لعبة باو بلاي">
     <div class="gametop"><button class="smallbutton" id="back">✕ رجوع</button><button class="smallbutton" id="fullscreenToggle" type="button" title="تكبير مساحة اللعب">⛶ ملء الشاشة</button><h5 id="activeTitle">PawPlay</h5><div class="grow"></div><span class="score" id="score">لمسات: 0</span></div>
+    <button type="button" id="focusExit" class="focus-exit" hidden aria-label="Exit expanded play mode">✕ <span id="focusExitLabel">Exit</span></button>
     <div class="gamearea" id="area"><canvas id="board" aria-label="مساحة اللعبة التفاعلية"></canvas><div class="gamehint" id="hint">المسي الهدف الأصفر 🟡</div></div>
     <div class="gamebottom" id="chaseTools"><label for="target">الهدف</label><select id="target" aria-label="اختيار الهدف"><option value="ball" selected>🎾 كرة</option><option value="fish">🐟 سمچة</option><option value="butterfly">🦋 فراشة</option></select><label for="speed">السرعة</label><select id="speed" aria-label="السرعة"><option value="0.7" selected>هادئة</option><option value="1.2">متوسطة</option><option value="2">سريعة</option></select><button class="smallbutton" id="restart">↻ إعادة</button></div>
     <div class="gamebottom soundcontrols hidden" id="soundTools">
@@ -296,7 +308,7 @@
     function toast(text){const e=q('#toast');e.textContent=text;e.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('show'),2300)}
     function resize(){const r=area.getBoundingClientRect(),oldW=w,oldH=h;w=Math.max(1,r.width);h=Math.max(1,r.height);ratio=Math.max(.8,Math.min(window.devicePixelRatio||1,2,Math.sqrt(3500000/(w*h))));canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);if(mode==='art')renderArt();if(ball){ball.r=clamp(Math.min(w,h)*.09,35,w>=700?79:56);ball.x=clamp(oldW>1?ball.x*w/oldW:ball.x,ball.r,w-ball.r);ball.y=clamp(oldH>1?ball.y*h/oldH:ball.y,ball.r,h-ball.r)}if(mode==='pop'&&oldW>1&&oldH>1){bubbles.forEach(b=>{b.x=b.x*w/oldW;b.y=b.y*h/oldH;b.r=clamp(Math.min(w,h)*.088,29,w>=700?67:53)})}}
     function open(type){cancelAnimationFrame(frameId);gameStartedAt=Date.now();mode=type;game.classList.add('on');document.body.style.overflow='hidden';q('#activeTitle').textContent=type==='chase'?'Paw Chase':type==='art'?'Paw Art':'Paw Pop';q('#chaseTools').classList.toggle('hidden',type!=='chase');q('#artTools').classList.toggle('hidden',type!=='art');q('#popTools').classList.toggle('hidden',type!=='pop');q('#soundTools').classList.toggle('hidden',type==='art');hint.textContent=type==='chase'?tt('Follow the ball','اتبع الكرة'):type==='art'?tt('Touch to paint','المس للرسم'):tt('Pop the bubbles','فرقّع الفقاعات');hint.style.display='block';setTimeout(()=>{if(game.classList.contains('on'))hint.style.display='none'},3600);resize();if(type==='chase')resetChase();else if(type==='art'){marks=[];hits=0;score.textContent=tt('Touches: 0','اللمسات: 0');renderArt()}else resetPop()}
-    function close(){const elapsed=Date.now()-gameStartedAt,wasPlayed=hits>0||elapsed>12000;game.classList.remove('on');if(document.fullscreenElement===game&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});document.body.style.overflow='';mode='';cancelAnimationFrame(frameId);if(wasPlayed&&!promoShown){promoShown=true;showDiscover()}}
+    function close(){const elapsed=Date.now()-gameStartedAt,wasPlayed=hits>0||elapsed>12000;leaveFocusMode();game.classList.remove('on');document.body.style.overflow='';mode='';cancelAnimationFrame(frameId);if(wasPlayed&&!promoShown){promoShown=true;showDiscover()}}
     function resetChase(){hits=0;score.textContent=tt('Touches: 0','اللمسات: 0');const r=clamp(Math.min(w,h)*.09,35,w>=700?79:56);ball={x:w*.5,y:h*.52,vx:1.55,vy:1.15,r,rotation:0};particles=[];lastTime=0;cancelAnimationFrame(frameId);frameId=requestAnimationFrame(loop)}
     function newBubble(inView=true){let r=clamp(Math.min(w,h)*(.07+Math.random()*.038),26,w>=700?68:53);return {x:r+Math.random()*Math.max(1,w-2*r),y:inView?r+Math.random()*Math.max(1,h-2*r):h+r+Math.random()*h*.25,vx:(Math.random()-.5)*.55,vy:-.35-Math.random()*.55,r,hue:[195,44,303,160,205][Math.floor(Math.random()*5)],phase:Math.random()*6.28}}
     function resetPop(){hits=0;score.textContent=tt('Bubbles: 0','فقاعات: 0');particles=[];bubbles=Array.from({length:w<420?6:w<700?9:Math.min(17,Math.max(10,Math.round(w*h/65000)))},()=>newBubble());lastTime=0;lastAutoSound=0;cancelAnimationFrame(frameId);frameId=requestAnimationFrame(loop)}
@@ -351,14 +363,45 @@
     canvas.addEventListener('pointermove',e=>{if(mode!=='art'||!draw)return;e.preventDefault();const p=point(e);stamp(p.x,p.y)});
     ['pointerup','pointercancel','lostpointercapture'].forEach(evt=>canvas.addEventListener(evt,()=>{draw=false}));
 
-    q('#fullscreenToggle').addEventListener('click',async()=>{
-      try{
-        if(document.fullscreenElement){await document.exitFullscreen();q('#fullscreenToggle').textContent=tt('Full screen','ملء الشاشة');return}
-        if(game.requestFullscreen){await game.requestFullscreen();q('#fullscreenToggle').textContent=tt('Exit full screen','تصغير');return}
-        toast(tt('The game already fills the screen. Use Safari or Chrome.','اللعبة تملأ الشاشة. استخدم Safari أو Chrome.'))
-      }catch(e){toast(tt('Full screen is not available in this browser','ملء الشاشة غير متاح في هذا المتصفح'))}
+    // Native fullscreen may work on iPad, Android and desktop.
+    // On iPhone, focus mode enlarges the actual gameplay area inside the visible Safari viewport.
+    let focusActive=false,nativeFullscreenActive=false;
+    const isIPhone=/iPhone|iPod/i.test(navigator.userAgent);
+    function updateFocusLabels(){
+      q('#fullscreenToggle').textContent=focusActive?tt('Show controls','إظهار التحكم'):tt('Expand game','تكبير اللعبة');
+      q('#focusExitLabel').textContent=tt('Exit','رجوع');
+      q('#focusExit').setAttribute('aria-label',tt('Exit expanded play mode','الخروج من وضع اللعب الموسع'));
+    }
+    function setFocusMode(active){
+      focusActive=active;
+      game.classList.toggle('focus-mode',active);
+      q('#focusExit').hidden=!active;
+      updateFocusLabels();
+      requestAnimationFrame(()=>{if(mode)resize()});
+    }
+    async function enterFocusMode(){
+      setFocusMode(true);
+      // Do not attempt unsupported fullscreen calls on iPhone; no misleading Safari/Chrome toast.
+      if(!isIPhone&&document.fullscreenEnabled&&game.requestFullscreen){
+        try{
+          await game.requestFullscreen({navigationUI:'hide'});
+          nativeFullscreenActive=!!document.fullscreenElement;
+        }catch(e){nativeFullscreenActive=false}
+      }
+      requestAnimationFrame(()=>{if(mode)resize()});
+    }
+    function leaveFocusMode(){
+      nativeFullscreenActive=false;
+      if(focusActive)setFocusMode(false);
+      if(document.fullscreenElement===game&&document.exitFullscreen)
+        document.exitFullscreen().catch(()=>{});
+    }
+    q('#fullscreenToggle').addEventListener('click',()=>{if(focusActive)leaveFocusMode();else enterFocusMode()});
+    q('#focusExit').addEventListener('click',leaveFocusMode);
+    document.addEventListener('fullscreenchange',()=>{
+      if(!document.fullscreenElement&&nativeFullscreenActive){nativeFullscreenActive=false;setFocusMode(false)}
+      else requestAnimationFrame(()=>{if(mode)resize()});
     });
-    document.addEventListener('fullscreenchange',()=>{q('#fullscreenToggle').textContent=document.fullscreenElement?tt('Exit full screen','تصغير'):tt('Full screen','ملء الشاشة')});
     q('#goChase').addEventListener('click',()=>open('chase'));q('#goArt').addEventListener('click',()=>open('art'));q('#goPop').addEventListener('click',()=>open('pop'));q('#back').addEventListener('click',close);q('#restart').addEventListener('click',resetChase);q('#restartPop').addEventListener('click',resetPop);
     q('#petType').addEventListener('change',()=>{q('#soundType').value=q('#petType').value==='cat'?'chirp':'squeak';toast(tt('Choose a sound your pet enjoys','اختر الصوت المناسب لأليفك'))});
     q('#soundEnable').addEventListener('click',()=>{soundOn=!soundOn;q('#soundEnable').textContent=soundOn?tt('Sound on','الصوت شغال'):tt('Sound off','الصوت مغلق');if(soundOn){audioReady();playSound();lastAutoSound=performance.now();toast(tt('Start with a low volume','ابدأ بصوت منخفض'))}});
@@ -434,7 +477,7 @@
       cameraStage=stage;
       secondary.hidden=stage!=='review';choose.hidden=stage==='review'||stage==='recording';fallback.hidden=true;
       ca('#cameraDirectChat').hidden=stage!=='review';
-      primary.textContent=stage==='review'?tt('Share video + caption','شارك الفيديو مع الكابشن'):stage==='recording'?tt('Stop recording','إيقاف التسجيل'):tt('Record video','صوّر فيديو');
+      primary.textContent=stage==='review'?tt('Share video → choose PawApp','شارك الفيديو ← اختاري باو أب'):stage==='recording'?tt('Stop recording','إيقاف التسجيل'):tt('Record video','صوّر فيديو');
       ca('#cameraHint').textContent=stage==='review'?tt('In WhatsApp, search PawApp +965 41117003 — not Message Yourself.','في واتساب ابحث عن PawApp +965 41117003، مو محادثتك مع نفسك.'):stage==='recording'?tt('Stop or finish after 20 seconds.','أوقف التسجيل أو ينتهي بعد 20 ثانية.'):tt('Preview before sharing.','شاهد الفيديو قبل المشاركة.');
       ca('#cameraRecordingTag').hidden=stage!=='recording';
     }
@@ -550,7 +593,7 @@
       // Share the video FILE plus the original challenge caption, not a text-only link.
       // WhatsApp decides the recipient after the user selects a chat; a web site cannot preselect it.
       fallback.hidden=true;
-      cameraStatus(tt('In WhatsApp select PawApp (+965 41117003), not Message Yourself.','في واتساب اختر PawApp (+965 41117003)، مو محادثتك مع نفسك.'));
+      cameraStatus(tt('Select PawApp (+965 41117003) as the recipient in WhatsApp.','في واتساب اختاري PawApp (+965 41117003) كمستلم.'));
       try{
         if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[cameraFile]}))){
           await navigator.share({
@@ -606,6 +649,7 @@
       for(const [selector,en,ar] of staticTexts){const el=q(selector);if(el)el.textContent=tt(en,ar)}
       for(const [selector,en,ar] of richTexts){const el=q(selector);if(el)el.innerHTML=tt(en,ar)}
       q('#soundEnable').textContent=soundOn?tt('Sound on','الصوت شغال'):tt('Sound off','الصوت مغلق');
+      updateFocusLabels();
       q('#score').textContent=(mode==='pop'?tt('Bubbles: ','فقاعات: '):tt('Touches: ','اللمسات: '))+hits;
       const tab=q('.discover-tab.active');const key=tab?.dataset.discover||'card';
       const v=details[key][language];const content=q('#discoverBody');content.replaceChildren();
