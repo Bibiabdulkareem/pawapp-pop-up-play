@@ -136,6 +136,7 @@
     .camera-secondary{background:#edf5ff;border:1px solid #bcd3f0;color:#12508f}
     .camera-note{background:#fff8d9;border:1px solid #efdda1;padding:11px;border-radius:13px;color:#685c35!important;margin-top:7px!important}
     .camera-link{display:block;text-align:center;font-size:12px;margin-top:9px;color:#366aa2;text-decoration:underline}
+    .whatsapp-direct{display:flex;align-items:center;justify-content:center;text-align:center;background:#e5f8eb!important;border:1px solid #67c58b!important;color:#0b713c!important;min-height:49px;text-decoration:none;width:100%;margin-top:9px;font-size:14px}
     @media(max-width:450px){.camera-sheet{padding:15px}.camera-sheet h2{font-size:21px}.camera-actions{gap:6px}.camera-actions button,.camera-actions label{font-size:12px}}
   </style>
 </head>
@@ -231,12 +232,12 @@
         <input id="cameraFile" type="file" accept="video/*" capture="environment" hidden />
         <button type="button" class="camera-primary" id="recordStart" disabled>⏺ ابدئي التسجيل</button>
         <button type="button" class="camera-secondary" id="recordStop" disabled>⏹ إيقاف التسجيل</button>
-        <button type="button" class="camera-primary" id="cameraShare" disabled>↗ شاركي الفيديو</button>
+        <button type="button" class="camera-primary" id="cameraShare" disabled>📤 شاركي الفيديو واختاري محادثة باو أب</button>
         <button type="button" class="camera-secondary" id="cameraDownload" disabled>⬇ احفظي الفيديو</button>
       </div>
-      <p class="camera-note">واتساب ما يسمح للموقع يرسل الفيديو تلقائيًا إلى رقم محدد. عند «شاركي الفيديو»، اختاري WhatsApp ثم محادثة باو أب واضغطي إرسال. أو احفظي الفيديو وافتحي رقمنا وأرفقيه يدويًا.</p>
-      <button type="button" class="smallbutton" id="cameraWhatsapp" disabled>💬 افتحي محادثة باو أب</button>
-      <p id="waNotice" style="font-size:12px;margin:7px 0 0">نضيف رقم واتساب باو أب الرسمي بعد ما ترسلينه.</p>
+      <p class="camera-note" id="waNotice"><b>عشان يوصلنا الفيديو مو لنفسج:</b> ١) احفظي الفيديو إذا تبين تحتفظين فيه. ٢) افتحي محادثة باو أب بالزر الأخضر، وبعدها ارجعي للعبة. ٣) اضغطي «شاركي الفيديو»، واختاري WhatsApp ثم <b>PawApp (+965 41117003)</b> واضغطي إرسال. اختيار المحادثة وإرسال الفيديو يتم من واتساب بنفسج.</p>
+      <a class="smallbutton whatsapp-direct" id="cameraWhatsapp" href="https://wa.me/96541117003" aria-label="فتح واتساب باو أب الرسمي على الرقم 96541117003">💬 افتحي واتساب باو أب — +965 41117003 ↗</a>
+      <p style="font-size:12px;margin:7px 0 0">إذا ما فتح التطبيق، افتحي الرابط من Safari أو Chrome. تنبيه: ملف الفيديو ما ينرفق تلقائيًا برابط واتساب.</p>
       <p style="font-size:11px">إرسال الفيديو لا يعني الموافقة على نشره في حساباتنا. نطلب موافقة منفصلة إذا اخترناه للحملة.</p>
     </div>
   </div>
@@ -374,7 +375,7 @@
 
     // Camera and video sharing are local-only until the owner intentionally shares a clip.
     // Use an E.164 number (country code + subscriber, digits only), never pre-fill a private number.
-    const PAWAPP_WHATSAPP_NUMBER=''; // set e.g. '965XXXXXXXX' only after business owner provides it
+    const PAWAPP_WHATSAPP_NUMBER='96541117003'; // official PawApp Business WhatsApp — provided by the owner
     const ca=s=>document.querySelector(s),cameraDialog=ca('#cameraOverlay'),cameraLive=ca('#cameraLive'),cameraRecorded=ca('#cameraRecorded');
     let cameraStream=null,cameraRecorder=null,cameraChunks=[],cameraFile=null,cameraObjectUrl=null,cameraTimer=null,cameraPriorFocus=null;
     const cameraStatus=message=>{ca('#cameraStatus').textContent=message};
@@ -394,7 +395,7 @@
       ca('#cameraPlaceholder').hidden=true;
       ca('#cameraShare').disabled=false;
       ca('#cameraDownload').disabled=false;
-      cameraStatus('الفيديو جاهز. اختاري مشاركة الفيديو إلى WhatsApp أو احفظيه ثم أرسليه.');
+      cameraStatus('الفيديو جاهز. افتحي محادثة باو أب أولًا، ثم اختاري مشاركة الفيديو ← WhatsApp ← PawApp (+965 41117003).');
     }
     function openCameraSheet(){
       cameraPriorFocus=document.activeElement;
@@ -472,22 +473,21 @@
       try{
         if(navigator.share&&navigator.canShare?.({files:[cameraFile]})){
           await navigator.share({files:[cameraFile],title:'PawPlay Challenge by PawApp',text:msg});
-          cameraStatus('اختاري WhatsApp ثم رقم باو أب واضغطي إرسال بنفسج.');return
+          cameraStatus('من قائمة المشاركة اختاري WhatsApp ثم محادثة PawApp (+965 41117003) واضغطي إرسال.');return
         }
-        cameraStatus('المشاركة المباشرة للفيديو مو مدعومة بهالمتصفح. احفظيه وافتحي واتساب وأرفقيه يدويًا.');
+        cameraStatus('هذا المتصفح ما يدعم مشاركة ملف الفيديو مباشرة. احفظي الفيديو، وافتحي محادثة باو أب من الزر الأخضر وأرفقيه يدويًا.');
       }catch(e){if(e.name!=='AbortError')cameraStatus('ما تمت المشاركة. احفظي الفيديو وأرفقيه عبر واتساب.')}
     });
     ca('#cameraDownload').addEventListener('click',()=>{
       if(!cameraFile)return;
       const link=document.createElement('a');link.href=cameraObjectUrl;link.download=cameraFile.name||'pawplay-challenge.mp4';document.body.appendChild(link);link.click();link.remove();
     });
-    const validPhone=/^\d{8,15}$/.test(PAWAPP_WHATSAPP_NUMBER);
-    ca('#cameraWhatsapp').disabled=!validPhone;
-    if(validPhone){ca('#waNotice').textContent='نفتح محادثة باو أب، ثم أرفقي الفيديو بنفسج واضغطي إرسال.'}
+    // A native hyperlink works more reliably than window.open in mobile in-app browsers.
+    // WhatsApp's public deep link can preselect a chat, but cannot attach or send a browser video.
+    const waMessage='هلا باو أب 🐾 هذي مشاركتي بتحدي PawPlay! راح أرفق الفيديو بنفسي.';
+    ca('#cameraWhatsapp').href='https://wa.me/'+PAWAPP_WHATSAPP_NUMBER+'?text='+encodeURIComponent(waMessage);
     ca('#cameraWhatsapp').addEventListener('click',()=>{
-      if(!validPhone){cameraStatus('أضيفي رقم واتساب باو أب الرسمي أولًا.');return}
-      const msg='هلا باو أب 🐾 هذي مشاركتي بتحدي PawPlay! راح أرفق الفيديو الحين.';
-      window.open('https://wa.me/'+PAWAPP_WHATSAPP_NUMBER+'?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
+      cameraStatus('محادثتج راح تفتح على +965 41117003. ارجعي للصفحة، ثم شاركي ملف الفيديو واختاري PawApp كمستلم.');
     });
 
     window.addEventListener('resize',()=>{if(mode)resize()});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&mode)close()});
