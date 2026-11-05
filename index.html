@@ -360,7 +360,7 @@
     let language='en';const tt=(en,ar)=>language==='ar'?ar:en;
     const q=s=>document.querySelector(s), canvas=q('#board'),ctx=canvas.getContext('2d'),area=q('#area'),game=q('#gameView'),score=q('#score'),hint=q('#hint');
     let mode='',w=0,h=0,ratio=1,frameId=0,lastTime=0,ball=null,hits=0,audioCtx=null,soundOn=false,draw=false,color='#ffca25',marks=[],particles=[],bubbles=[],toastTimer=0,lastAutoSound=0,gameStartedAt=0,promoShown=false,promoBeforeFocus=null;
-    let lastChallengeScore=null,lastChallengeGame='',challengePriorFocus=null;
+    let lastChallengeScore=null,lastChallengeGame='',challengePriorFocus=null,scoreCardFilePromise=null;
     const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
     function toast(text){const e=q('#toast');e.textContent=text;e.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('show'),2300)}
     function resize(){const r=area.getBoundingClientRect(),oldW=w,oldH=h;w=Math.max(1,r.width);h=Math.max(1,r.height);ratio=Math.max(.8,Math.min(window.devicePixelRatio||1,2,Math.sqrt(3500000/(w*h))));canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);if(mode==='art')renderArt();if(ball){ball.r=clamp(Math.min(w,h)*.09,35,w>=700?79:56);ball.x=clamp(oldW>1?ball.x*w/oldW:ball.x,ball.r,w-ball.r);ball.y=clamp(oldH>1?ball.y*h/oldH:ball.y,ball.r,h-ball.r)}if(mode==='pop'&&oldW>1&&oldH>1){bubbles.forEach(b=>{b.x=b.x*w/oldW;b.y=b.y*h/oldH;b.r=clamp(Math.min(w,h)*.088,29,w>=700?67:53)})}}
@@ -483,6 +483,65 @@
       health:{en:['Medical history','Keep visits, vaccinations and reports with the medical subscription.'],ar:['السجل الطبي','احتفظ بالزيارات والتطعيمات والتقارير باشتراك السجل الطبي.']},
       reminder:{en:['Vaccine reminders','Track upcoming vaccines and care.'],ar:['تذكيرات التطعيم','تابع مواعيد التطعيم والرعاية القادمة.']}
     };
+    // Export a shareable image of the local round result. No leaderboard or score verification yet.
+    async function createScoreCard(){
+      const card=document.createElement('canvas');
+      card.width=1080;card.height=1350;
+      const x=card.getContext('2d');
+      const gradient=x.createLinearGradient(0,0,1080,1350);
+      gradient.addColorStop(0,'#062855');gradient.addColorStop(.62,'#114d9c');gradient.addColorStop(1,'#087cae');
+      x.fillStyle=gradient;x.fillRect(0,0,1080,1350);
+      x.strokeStyle='rgba(255,255,255,.12)';x.lineWidth=6;
+      for(let i=0;i<12;i++){x.beginPath();x.arc(150+(i%4)*280,200+Math.floor(i/4)*450,55,0,Math.PI*2);x.stroke()}
+      x.textAlign='center';x.textBaseline='middle';
+      x.fillStyle='#e6f5ff';x.font='bold 38px Arial, sans-serif';x.fillText('PAWAPP',540,140);
+      x.fillStyle='#ffffff';x.font='bold 78px Arial, sans-serif';x.fillText('PawPlay',540,286);
+      x.fillStyle='#ffdb51';x.font='bold 52px Arial, sans-serif';x.fillText('CHALLENGE',540,358);
+      x.fillStyle='#ffffff';x.font='bold 47px Arial, sans-serif';
+      x.fillText(tt('MY PET SCORED','نتيجة أليفي'),540,535);
+      x.fillStyle='#ffde54';x.font='bold 270px Arial, sans-serif';
+      x.fillText(String(lastChallengeScore??0),540,765,900);
+      x.fillStyle='#f6fbff';x.font='bold 54px Arial, sans-serif';x.fillText(tt('TAPS','لمسة'),540,938);
+      x.fillStyle='#d7ebff';x.font='bold 37px Arial, sans-serif';
+      const gameTitle=lastChallengeGame==='chase'?'Paw Chase':lastChallengeGame==='art'?'Paw Art':'Paw Pop';
+      x.fillText(gameTitle,540,1035);
+      x.fillStyle='#ffde54';x.font='bold 42px Arial, sans-serif';x.fillText('#PawPlayChallenge',540,1155);
+      x.fillStyle='#d3e8ff';x.font='27px Arial, sans-serif';
+      x.fillText(tt('Play for fun. Official competition details coming soon.','للعب والمرح. تفاصيل المسابقة الرسمية قريبًا.'),540,1236,1010);
+      const blob=await new Promise(resolve=>card.toBlob(resolve,'image/png'));
+      if(!blob)throw Error('Score image was not generated');
+      return new File([blob],'pawplay-'+String(lastChallengeScore??0)+'-taps.png',{type:'image/png'});
+    }
+    async function shareScore(){
+      const status=q('#challengeStatus');
+      status.hidden=false;
+      status.textContent=tt('Preparing your score card…','جاري تجهيز بطاقة نتيجتك…');
+      try{
+        const file=await (scoreCardFilePromise||createScoreCard());
+        const caption=tt(
+          'PawPlay Challenge! '+String(lastChallengeScore??0)+' taps 🐾 #PawPlayChallenge #PawApp @pawapp_',
+          'تحدي PawPlay! '+String(lastChallengeScore??0)+' لمسة 🐾 #PawPlayChallenge #PawApp @pawapp_'
+        );
+        if(navigator.share&&navigator.canShare?.({files:[file]})){
+          try{
+            await navigator.share({files:[file],text:caption,title:'PawPlay Challenge'});
+            status.textContent=tt('Choose WhatsApp, Instagram or TikTok to post your score.','اختَر واتساب أو إنستغرام أو تيك توك لمشاركة نتيجتك.');
+            return;
+          }catch(e){
+            if(e?.name==='AbortError'){status.hidden=true;return}
+          }
+        }
+        const url=URL.createObjectURL(file);
+        const a=document.createElement('a');
+        a.href=url;a.download=file.name;
+        document.body.appendChild(a);a.click();a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),30000);
+        status.textContent=tt('Score card saved. Share it on WhatsApp, Instagram or TikTok.','تم تجهيز بطاقة النتيجة للحفظ. شاركها في واتساب أو إنستغرام أو تيك توك.');
+      }catch(e){
+        status.textContent=tt('Could not prepare the score card. Please try again.','تعذر تجهيز بطاقة النتيجة. جرّب مرة ثانية.');
+      }
+    }
+    q('#challengeShareScore').addEventListener('click',shareScore);
     function renderChallengeScore(){
       const value=lastChallengeScore===null?'—':String(lastChallengeScore);
       q('#challengeScore').textContent=value;
@@ -491,6 +550,7 @@
     }
     function showChallenge(){
       renderChallengeScore();
+      scoreCardFilePromise=createScoreCard();
       q('#challengeStatus').hidden=true;
       q('#challengeHelp').open=false;
       challengePriorFocus=document.activeElement;
@@ -503,7 +563,13 @@
       document.body.style.overflow='';
       if(challengePriorFocus?.focus)challengePriorFocus.focus();
     }
-    q('#challengeJoin').addEventListener('click',()=>{hideChallenge();openCameraSheet()});
+    q('#challengeJoin').addEventListener('click',()=>{
+      hideChallenge();
+      openCameraSheet();
+      // On a phone, reuse the user's recorded screen video or one filmed with a second device.
+      external.value='';
+      external.click();
+    });
     q('#challengePlayAgain').addEventListener('click',()=>{const prior=lastChallengeGame||'chase';hideChallenge();open(prior)});
     q('#challengeClose').addEventListener('click',hideChallenge);
     q('#challengeOverlay').addEventListener('click',e=>{if(e.target.id==='challengeOverlay')hideChallenge()});
@@ -555,7 +621,7 @@
       ca('#copyChallengeCaption').hidden=stage!=='review';
       ca('.camera-sheet').classList.toggle('review',stage==='review');
       primary.textContent=stage==='review'?tt('WhatsApp PawApp','واتساب باو أب'):stage==='recording'?tt('Stop recording','إيقاف التسجيل'):tt('Record video','صوّر فيديو');
-      ca('#cameraHint').textContent=stage==='review'?tt('Opens PawApp chat. Attach your video there.','يفتح محادثة باو أب. أرفق الفيديو هناك.'):stage==='recording'?tt('Stop or finish after 20 seconds.','أوقف التسجيل أو ينتهي بعد 20 ثانية.'):tt('Preview before sharing.','شاهد الفيديو قبل المشاركة.');
+      ca('#cameraHint').textContent=stage==='review'?tt('Choose where to share the recorded clip.','اختر وين تبي تشارك الفيديو المسجل.'):stage==='recording'?tt('Stop or finish after 20 seconds.','أوقف التسجيل أو ينتهي بعد 20 ثانية.'):tt('Choose a saved screen recording, or film your pet from a second phone.','اختر تسجيل شاشة محفوظ، أو صوّر أليفك بجهاز ثاني.');
       ca('#cameraRecordingTag').hidden=stage!=='recording';
     }
     function stopCameraTracks(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}cameraLive.srcObject=null;}
@@ -752,7 +818,7 @@
     });
 
 
-    const staticTexts=[[".mini-label","Free pet games","ألعاب مجانية"],[".hero-copy .eyebrow","A gift from Dr. Bo","هدية من دكتور بو"],["#giftHeading","Free games for your pet","ألعاب مجانية لأليفك"],[".hero-copy p","Three games. Play, record and share.","ثلاث ألعاب. العب، صوّر وشارك."],["#bookingGift .gift-blurb strong","Thank you for booking!","شكرًا لحجزك!"],[".share-strip strong","PawPlay Challenge","تحدي PawPlay"],[".share-strip p","Capture your pet’s reaction.","صوّر ردة فعل أليفك."],["#openCamera","Record your pet","صوّر أليفك"],["#sharePlay","Share games","شارك الألعاب"],[".tablet-note","Play on any screen","تعمل على جميع الشاشات"],[".gift h3","Choose a game","اختر لعبة"],[".gift p","Free to play. Sound is optional.","اللعب مجاني. الصوت اختياري."],[".chasevisual + .details h4","Paw Chase","Paw Chase"],[".chasevisual + .details p","Chase the moving ball.","طارد الكرة المتحركة."],["#goChase","Play now","العب الآن"],[".artvisual + .details h4","Paw Art","Paw Art"],[".artvisual + .details p","Paint with every touch.","ارسم مع كل لمسة."],["#goArt","Play now","العب الآن"],[".newbadge","New","جديد"],[".popvisual + .details h4","Paw Pop","Paw Pop"],[".popvisual + .details p","Pop colorful bubbles.","فرقّع الفقاعات الملوّنة."],["#goPop","Play now","العب الآن"],[".petid-eyebrow","From PawApp","من باو أب"],[".petid-intro p","Digital ID, reminders and medical records in the PawApp app.","بطاقة رقمية، تذكيرات وسجل طبي داخل تطبيق باو أب."],["#petidDiscover","Explore Pet ID","اكتشف Pet ID"],["#howToFind","Already have the app?","عندك التطبيق؟"],[".demo-label","Demo only","نموذج توضيحي"],[".foot > div:first-of-type","Free games by PawApp. No sign-up required.","ألعاب مجانية من باو أب. بدون تسجيل."],[".foot .note","Keep your pet supervised. Start with low volume and stop if they seem uncomfortable.","راقب أليفك أثناء اللعب. ابدأ بصوت منخفض وأوقفه إذا انزعج."],[".foot a","PawApp website","موقع باو أب"],["#back","Finish round","إنهاء الجولة"],["#fullscreenToggle","Full screen","ملء الشاشة"],["#score","Touches: 0","اللمسات: 0"],["#hint","Tap the moving target","المس الهدف المتحرك"],["#chaseTools label[for=target]","Target","الهدف"],["#chaseTools label[for=speed]","Speed","السرعة"],["#target option[value=ball]","Ball","كرة"],["#target option[value=fish]","Fish","سمچة"],["#target option[value=butterfly]","Butterfly","فراشة"],["#speed option[value='0.7']","Slow","هادئة"],["#speed option[value='1.2']","Medium","متوسطة"],["#speed option[value='2']","Fast","سريعة"],["#restart","Restart","إعادة"],["#soundTools label[for=petType]","Pet","الأليف"],["#petType option[value=dog]","Dog","كلب"],["#petType option[value=cat]","Cat","قطوة"],["#soundTools label[for=soundType]","Sound","الصوت"],["#soundType option[value=squeak]","Toy squeak","صرير لعبة"],["#soundType option[value=chirp]","Bird chirp","زقزقة"],["#soundType option[value=pop]","Pop","فرقعة"],["#soundType option[value=whistle]","Gentle whistle","صفارة لطيفة"],["#soundTools label[for=volume]","Volume","مستوى الصوت"],["#soundTest","Test sound","جرّب الصوت"],["#popTools label[for=bubbleSpeed]","Motion","الحركة"],["#bubbleSpeed option[value='.65']","Slow","هادئة"],["#bubbleSpeed option[value='1']","Normal","عادية"],["#bubbleSpeed option[value='1.35']","Fast","سريعة"],["#restartPop","Restart","إعادة"],["#clearArt","Clear","مسح"],["#saveArt","Save artwork","حفظ اللوحة"],[".discover-tag","Pet ID by PawApp","Pet ID من باو أب"],[".discover-overlay .discover-sheet > p","Your pet’s health details, all in one place.","معلومات أليفك الصحية في مكان واحد."],[".discover-tab[data-discover=card]","Digital ID","بطاقة رقمية"],[".discover-tab[data-discover=health]","Medical history","السجل الطبي"],[".discover-tab[data-discover=reminder]","Reminders","التذكيرات"],[".discover-instruction","Create your Pet ID inside the PawApp app. Fees may apply.","إنشاء Pet ID من داخل تطبيق باو أب. قد تطبق رسوم."],["#downloadApp","Download PawApp","حمّل باو أب"],["#alreadyInstalled","Already installed?","عندك التطبيق؟"],["#keepPlaying","Keep playing","كمل اللعب"],["#cameraHeading","Record your pet","صوّر أليفك"],[".camera-subtitle","Record 10–20 seconds, or choose a video.","صوّر 10–20 ثانية أو اختر فيديو."],["#cameraPlaceholder span","Ready to record","جاهز للتصوير"],["#cameraSecondary","Retake","إعادة التصوير"],["#cameraChoose","Choose video","اختر فيديو"],["#cameraPrimary","Record video","صوّر فيديو"],["#cameraFallbackText","Can't share the file? Save it and attach in WhatsApp.","إذا المشاركة غير متاحة، احفظ الفيديو وأرفقه في واتساب."],["#cameraSave","Save video","حفظ الفيديو"],["#cameraChat","PawApp WhatsApp","واتساب باو أب"],["#cameraHint","Preview before sharing.","شاهد الفيديو قبل المشاركة."],[".camera-consent","We ask permission before reposting your video.","نطلب الإذن قبل نشر الفيديو."],["#cameraRecordingLabel","Recording","جاري التسجيل"],["#cameraLoading","Preparing video…","جاري تجهيز الفيديو…"]];
+    const staticTexts=[[".mini-label","Free pet games","ألعاب مجانية"],[".hero-copy .eyebrow","A gift from Dr. Bo","هدية من دكتور بو"],["#giftHeading","Free games for your pet","ألعاب مجانية لأليفك"],[".hero-copy p","Three games. Play, record and share.","ثلاث ألعاب. العب، صوّر وشارك."],["#bookingGift .gift-blurb strong","Thank you for booking!","شكرًا لحجزك!"],[".share-strip strong","PawPlay Challenge","تحدي PawPlay"],[".share-strip p","Capture your pet’s reaction.","صوّر ردة فعل أليفك."],["#openCamera","Record your pet","صوّر أليفك"],["#sharePlay","Share games","شارك الألعاب"],[".tablet-note","Play on any screen","تعمل على جميع الشاشات"],[".gift h3","Choose a game","اختر لعبة"],[".gift p","Free to play. Sound is optional.","اللعب مجاني. الصوت اختياري."],[".chasevisual + .details h4","Paw Chase","Paw Chase"],[".chasevisual + .details p","Chase the moving ball.","طارد الكرة المتحركة."],["#goChase","Play now","العب الآن"],[".artvisual + .details h4","Paw Art","Paw Art"],[".artvisual + .details p","Paint with every touch.","ارسم مع كل لمسة."],["#goArt","Play now","العب الآن"],[".newbadge","New","جديد"],[".popvisual + .details h4","Paw Pop","Paw Pop"],[".popvisual + .details p","Pop colorful bubbles.","فرقّع الفقاعات الملوّنة."],["#goPop","Play now","العب الآن"],[".petid-eyebrow","From PawApp","من باو أب"],[".petid-intro p","Digital ID, reminders and medical records in the PawApp app.","بطاقة رقمية، تذكيرات وسجل طبي داخل تطبيق باو أب."],["#petidDiscover","Explore Pet ID","اكتشف Pet ID"],["#howToFind","Already have the app?","عندك التطبيق؟"],[".demo-label","Demo only","نموذج توضيحي"],[".foot > div:first-of-type","Free games by PawApp. No sign-up required.","ألعاب مجانية من باو أب. بدون تسجيل."],[".foot .note","Keep your pet supervised. Start with low volume and stop if they seem uncomfortable.","راقب أليفك أثناء اللعب. ابدأ بصوت منخفض وأوقفه إذا انزعج."],[".foot a","PawApp website","موقع باو أب"],["#back","Finish round","إنهاء الجولة"],["#fullscreenToggle","Full screen","ملء الشاشة"],["#score","Touches: 0","اللمسات: 0"],["#hint","Tap the moving target","المس الهدف المتحرك"],["#chaseTools label[for=target]","Target","الهدف"],["#chaseTools label[for=speed]","Speed","السرعة"],["#target option[value=ball]","Ball","كرة"],["#target option[value=fish]","Fish","سمچة"],["#target option[value=butterfly]","Butterfly","فراشة"],["#speed option[value='0.7']","Slow","هادئة"],["#speed option[value='1.2']","Medium","متوسطة"],["#speed option[value='2']","Fast","سريعة"],["#restart","Restart","إعادة"],["#soundTools label[for=petType]","Pet","الأليف"],["#petType option[value=dog]","Dog","كلب"],["#petType option[value=cat]","Cat","قطوة"],["#soundTools label[for=soundType]","Sound","الصوت"],["#soundType option[value=squeak]","Toy squeak","صرير لعبة"],["#soundType option[value=chirp]","Bird chirp","زقزقة"],["#soundType option[value=pop]","Pop","فرقعة"],["#soundType option[value=whistle]","Gentle whistle","صفارة لطيفة"],["#soundTools label[for=volume]","Volume","مستوى الصوت"],["#soundTest","Test sound","جرّب الصوت"],["#popTools label[for=bubbleSpeed]","Motion","الحركة"],["#bubbleSpeed option[value='.65']","Slow","هادئة"],["#bubbleSpeed option[value='1']","Normal","عادية"],["#bubbleSpeed option[value='1.35']","Fast","سريعة"],["#restartPop","Restart","إعادة"],["#clearArt","Clear","مسح"],["#saveArt","Save artwork","حفظ اللوحة"],[".discover-tag","Pet ID by PawApp","Pet ID من باو أب"],[".discover-overlay .discover-sheet > p","Your pet’s health details, all in one place.","معلومات أليفك الصحية في مكان واحد."],[".discover-tab[data-discover=card]","Digital ID","بطاقة رقمية"],[".discover-tab[data-discover=health]","Medical history","السجل الطبي"],[".discover-tab[data-discover=reminder]","Reminders","التذكيرات"],[".discover-instruction","Create your Pet ID inside the PawApp app. Fees may apply.","إنشاء Pet ID من داخل تطبيق باو أب. قد تطبق رسوم."],["#downloadApp","Download PawApp","حمّل باو أب"],["#alreadyInstalled","Already installed?","عندك التطبيق؟"],["#keepPlaying","Keep playing","كمل اللعب"],["#cameraHeading","Your challenge video","فيديو التحدي"],[".camera-subtitle","Use a saved video from the round.","اختَر فيديو محفوظ من الجولة."],["#cameraPlaceholder span","Ready to record","جاهز للتصوير"],["#cameraSecondary","Retake","إعادة التصوير"],["#cameraChoose","Choose video","اختر فيديو"],["#cameraPrimary","Record video","صوّر فيديو"],["#cameraFallbackText","Can't share the file? Save it and attach in WhatsApp.","إذا المشاركة غير متاحة، احفظ الفيديو وأرفقه في واتساب."],["#cameraSave","Save video","حفظ الفيديو"],["#cameraChat","PawApp WhatsApp","واتساب باو أب"],["#cameraHint","Preview before sharing.","شاهد الفيديو قبل المشاركة."],[".camera-consent","We ask permission before reposting your video.","نطلب الإذن قبل نشر الفيديو."],["#cameraRecordingLabel","Recording","جاري التسجيل"],["#cameraLoading","Preparing video…","جاري تجهيز الفيديو…"]];
     const richTexts=[[".petid-intro h3","Your pet’s info, <em>all in one place</em>","معلومات أليفك <em>في مكان واحد</em>"],["#discoverTitle","Meet <span>Pet ID</span>","تعرّف على <span>Pet ID</span>"],["#instructionPanel","Open PawApp → Account → Your Pets → Pet ID.","افتح باو أب ← الحساب ← حيواناتك ← Pet ID."],["#huaweiNote","PawPlay runs in your browser. PawApp app availability depends on your device’s store.","PawPlay يعمل بالمتصفح. توفر تطبيق باو أب يعتمد على متجر جهازك."]];
     function applyLanguage(next){
       language=next==='ar'?'ar':'en';
