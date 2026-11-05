@@ -217,6 +217,17 @@
     .camera-score-chip[hidden]{display:none!important}
     .camera-score-chip strong{font-size:20px;font-variant-numeric:tabular-nums}
     @media(max-height:630px){.camera-score-chip{margin-top:4px;padding:4px 8px}}
+
+    .finish-round{position:absolute;inset-block-start:12px;inset-inline-start:12px;z-index:10;min-height:42px;background:#ffcf32;border:1px solid #dfb122;color:#103c7c;font-size:13px;font-weight:900;border-radius:13px;padding:9px 14px;box-shadow:0 3px 12px #001d4855;cursor:pointer;touch-action:manipulation}
+    #gameView.focus-mode .finish-round{inset-block-start:calc(13px + env(safe-area-inset-top,0px));inset-inline-start:12px}
+    #gameView.focus-mode .focus-exit{display:none!important}
+    .challenge-sheet .challenge-option{width:100%;min-height:48px;background:#edf5ff;border:1px solid #bdd5f0;border-radius:12px;color:#1352a0;font-size:14px;font-weight:850;cursor:pointer;margin-bottom:7px}
+    .challenge-help{font-size:12px;line-height:1.55;color:#466587;text-align:start;margin:8px 0 0}
+    .challenge-help summary{cursor:pointer;text-align:center;color:#2b659f;font-weight:800}
+    .challenge-sheet .challenge-help p{font-size:12px;line-height:1.55;margin:8px 0 0}
+    .challenge-sheet p.challenge-status{font-size:12px;color:#125295;margin:10px 0 2px}
+    .challenge-status[hidden]{display:none!important}
+    @media(max-height:610px){.challenge-sheet{padding:18px 18px 12px;max-height:95dvh;overflow-y:auto}.challenge-score{padding:8px;margin:6px auto 8px}.challenge-score strong{font-size:40px}.challenge-sheet p{margin-bottom:8px}}
   </style>
 </head>
 <body>
@@ -229,10 +240,6 @@
 
     <section class="gift-message" id="bookingGift" hidden aria-live="polite">
       <div class="gift-medal">🎁</div><div class="gift-blurb"><strong>شكرًا لحجزك عبر باو أب!</strong><p id="giftService">بمناسبة الحجز، عندنا هدية مجانية لأليفك. نتمنى لكم وقتًا ممتعًا مع دكتور بو 💛</p></div>
-    </section>
-    <section class="share-strip" aria-label="المشاركة">
-      <div><strong>PawPlay Challenge</strong><p>صوّر أليفك أثناء اللعب وشاركنا الفيديو.</p></div>
-      <div class="share-actions"><button class="button camera-cta" type="button" id="openCamera">صوّر أليفك</button><button class="smallbutton" type="button" id="sharePlay">شارك اللعبة</button></div>
     </section>
     <section class="gift"><div class="tablet-note" role="note">تعمل على التابلت، الموبايل والكمبيوتر</div><h3>اختر لعبة</h3><p>العب مجانًا، بدون تسجيل. الصوت اختياري.</p></section>
     <div class="games">
@@ -259,7 +266,7 @@
   <div id="gameView" role="dialog" aria-modal="true" aria-label="لعبة باو بلاي">
     <div class="gametop"><button class="smallbutton" id="back">✕ رجوع</button><button class="smallbutton" id="fullscreenToggle" type="button" title="تكبير مساحة اللعب">⛶ ملء الشاشة</button><h5 id="activeTitle">PawPlay</h5><div class="grow"></div><span class="score" id="score">لمسات: 0</span></div>
     <button type="button" id="focusExit" class="focus-exit" hidden aria-label="Exit expanded play mode">✕ <span id="focusExitLabel">Exit</span></button>
-    <div class="gamearea" id="area"><canvas id="board" aria-label="مساحة اللعبة التفاعلية"></canvas><div class="gamehint" id="hint">المسي الهدف الأصفر 🟡</div><div id="liveTapBadge" class="live-tap-badge"><span id="liveTapLabel">Taps</span><strong id="liveTapCount">0</strong></div></div>
+    <div class="gamearea" id="area"><canvas id="board" aria-label="مساحة اللعبة التفاعلية"></canvas><div class="gamehint" id="hint">المسي الهدف الأصفر 🟡</div><div id="liveTapBadge" class="live-tap-badge"><span id="liveTapLabel">Taps</span><strong id="liveTapCount">0</strong></div><button type="button" id="finishRound" class="finish-round">Finish round</button></div>
     <div class="gamebottom" id="chaseTools"><label for="target">الهدف</label><select id="target" aria-label="اختيار الهدف"><option value="ball" selected>🎾 كرة</option><option value="fish">🐟 سمچة</option><option value="butterfly">🦋 فراشة</option></select><label for="speed">السرعة</label><select id="speed" aria-label="السرعة"><option value="0.7" selected>هادئة</option><option value="1.2">متوسطة</option><option value="2">سريعة</option></select><button class="smallbutton" id="restart">↻ إعادة</button></div>
     <div class="gamebottom soundcontrols hidden" id="soundTools">
       <label for="petType">الأليف</label><select id="petType" aria-label="نوع الأليف"><option value="dog">🐶 كلب</option><option value="cat">🐱 قطوة</option></select>
@@ -274,12 +281,15 @@
     <div class="challenge-sheet">
       <button type="button" class="challenge-x" id="challengeClose" aria-label="Close">✕</button>
       <span class="challenge-kicker">PawPlay Challenge</span>
-      <h2 id="challengeHeading">Great job!</h2>
-      <div class="challenge-score"><span id="challengeScoreLabel">Your pet's taps</span><strong id="challengeScore">0</strong></div>
-      <p id="challengeDescription">Want to join the challenge? Film your pet playing!</p>
-      <button type="button" class="button challenge-primary" id="challengeJoin">Join the challenge</button>
-      <button type="button" class="challenge-later" id="challengeLater">Not now</button>
-      <p class="challenge-disclaimer" id="challengeDisclaimer">Competition details and prizes coming later.</p>
+      <h2 id="challengeHeading">Round complete!</h2>
+      <div class="challenge-score"><span id="challengeScoreLabel">Taps this round</span><strong id="challengeScore">0</strong></div>
+      <p id="challengeDescription">Share your score, or add a video recorded during play.</p>
+      <button type="button" class="button challenge-primary" id="challengeShareScore">Share score</button>
+      <button type="button" class="challenge-option" id="challengeJoin">Add recorded video</button>
+      <button type="button" class="challenge-later" id="challengePlayAgain">Play again</button>
+      <details class="challenge-help" id="challengeHelp"><summary id="challengeHelpTitle">How do I record?</summary><p id="challengeHelpBody">On this phone, start Screen Recording before the next round. To film your pet touching the screen, use another phone.</p></details>
+      <p id="challengeStatus" class="challenge-status" role="status" aria-live="polite" hidden></p>
+      <p class="challenge-disclaimer" id="challengeDisclaimer">Just for fun. Competition rules and prizes coming later.</p>
     </div>
   </div>
   <div class="discover-overlay" id="discoverOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="discoverTitle">
@@ -312,8 +322,8 @@
         <span class="camera-brand">PawPlay Challenge <span>by PawApp</span></span>
         <button type="button" class="camera-close" id="cameraClose" aria-label="إغلاق">✕</button>
       </div>
-      <h2 id="cameraHeading">صوّر ردة فعل أليفك</h2>
-      <p class="camera-subtitle">مقطع قصير من 10 إلى 20 ثانية.</p>
+      <h2 id="cameraHeading">Your challenge video</h2>
+      <p class="camera-subtitle">Choose a video recorded while your pet played.</p>
       <div class="camera-view">
         <div class="camera-placeholder" id="cameraPlaceholder">
           <svg viewBox="0 0 64 64" width="58" height="58" fill="none" aria-hidden="true"><rect x="6" y="16" width="39" height="32" rx="8" stroke="currentColor" stroke-width="3"/><path d="M46 25l12-7v28l-12-7" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><circle cx="26" cy="32" r="7" stroke="currentColor" stroke-width="3"/></svg>
@@ -338,7 +348,7 @@
       <input id="cameraFile" type="file" accept="video/*" capture="environment" hidden />
       <input id="cameraExternal" type="file" accept="video/*" hidden />
       <div id="cameraFallback" class="camera-fallback" hidden><span id="cameraFallbackText">Can’t share the file here? Save it, then attach it in our WhatsApp chat.</span><button type="button" id="cameraSave" class="camera-secondary">Save video</button><a class="camera-secondary" href="https://wa.me/96541117003?text=PawPlay%20Challenge" id="cameraChat">Open PawApp WhatsApp</a></div>
-      <p class="camera-hint" id="cameraHint">Preview your video before sharing.</p>
+      <p class="camera-hint" id="cameraHint">Choose a clip from Photos, or film with another phone.</p>
       <p class="camera-consent">إرسال الفيديو لا يعني الموافقة على نشره. نطلب الإذن قبل استخدامه بالإعلانات.</p>
     </div>
   </div>
@@ -357,10 +367,10 @@
     function updateTapBadge(){q('#liveTapCount').textContent=String(hits);}
     function open(type){cancelAnimationFrame(frameId);gameStartedAt=Date.now();mode=type;game.classList.add('on');document.body.style.overflow='hidden';q('#activeTitle').textContent=type==='chase'?'Paw Chase':type==='art'?'Paw Art':'Paw Pop';q('#chaseTools').classList.toggle('hidden',type!=='chase');q('#artTools').classList.toggle('hidden',type!=='art');q('#popTools').classList.toggle('hidden',type!=='pop');q('#soundTools').classList.toggle('hidden',type==='art');hint.textContent=type==='chase'?tt('Follow the ball','اتبع الكرة'):type==='art'?tt('Touch to paint','المس للرسم'):tt('Pop the bubbles','فرقّع الفقاعات');hint.style.display='block';setTimeout(()=>{if(game.classList.contains('on'))hint.style.display='none'},3600);resize();if(type==='chase')resetChase();else if(type==='art'){marks=[];hits=0;updateTapBadge();score.textContent=tt('Touches: 0','اللمسات: 0');renderArt()}else resetPop()}
     function close(){
-      const wasPlayed=hits>0||Date.now()-gameStartedAt>8000;
-      if(wasPlayed){lastChallengeScore=hits;lastChallengeGame=mode;}
+      if(!mode)return;
+      lastChallengeScore=hits;lastChallengeGame=mode;
       leaveFocusMode();game.classList.remove('on');document.body.style.overflow='';mode='';cancelAnimationFrame(frameId);
-      if(wasPlayed)showChallenge();
+      showChallenge();
     }
     function resetChase(){hits=0;updateTapBadge();score.textContent=tt('Touches: 0','اللمسات: 0');const r=clamp(Math.min(w,h)*.09,35,w>=700?79:56);ball={x:w*.5,y:h*.52,vx:1.55,vy:1.15,r,rotation:0};particles=[];lastTime=0;cancelAnimationFrame(frameId);frameId=requestAnimationFrame(loop)}
     function newBubble(inView=true){let r=clamp(Math.min(w,h)*(.07+Math.random()*.038),26,w>=700?68:53);return {x:r+Math.random()*Math.max(1,w-2*r),y:inView?r+Math.random()*Math.max(1,h-2*r):h+r+Math.random()*h*.25,vx:(Math.random()-.5)*.55,vy:-.35-Math.random()*.55,r,hue:[195,44,303,160,205][Math.floor(Math.random()*5)],phase:Math.random()*6.28}}
@@ -451,6 +461,7 @@
     }
     q('#fullscreenToggle').addEventListener('click',()=>{if(focusActive)leaveFocusMode();else enterFocusMode()});
     q('#focusExit').addEventListener('click',close);
+    q('#finishRound').addEventListener('click',close);
     document.addEventListener('fullscreenchange',()=>{
       if(!document.fullscreenElement&&nativeFullscreenActive){nativeFullscreenActive=false;setFocusMode(false)}
       else requestAnimationFrame(()=>{if(mode)resize()});
@@ -480,6 +491,8 @@
     }
     function showChallenge(){
       renderChallengeScore();
+      q('#challengeStatus').hidden=true;
+      q('#challengeHelp').open=false;
       challengePriorFocus=document.activeElement;
       q('#challengeOverlay').hidden=false;
       document.body.style.overflow='hidden';
@@ -491,7 +504,7 @@
       if(challengePriorFocus?.focus)challengePriorFocus.focus();
     }
     q('#challengeJoin').addEventListener('click',()=>{hideChallenge();openCameraSheet()});
-    q('#challengeLater').addEventListener('click',hideChallenge);
+    q('#challengePlayAgain').addEventListener('click',()=>{const prior=lastChallengeGame||'chase';hideChallenge();open(prior)});
     q('#challengeClose').addEventListener('click',hideChallenge);
     q('#challengeOverlay').addEventListener('click',e=>{if(e.target.id==='challengeOverlay')hideChallenge()});
     q('#challengeOverlay').addEventListener('keydown',e=>{if(e.key==='Escape')hideChallenge()});
@@ -524,20 +537,6 @@
       q('#giftService').textContent=tt('Thanks for booking '+name+' with PawApp. Enjoy three free games!','شكرًا لحجز '+name+' مع باو أب. هديتك 3 ألعاب مجانية!');
       q('#giftHeading').textContent=tt('A gift for your pet','هدية لأليفك');
     }
-    q('#sharePlay').addEventListener('click',async()=>{
-      const url=new URL(window.location.href);
-      url.search='?utm_source=customer_share&utm_medium=whatsapp&utm_campaign=pawplay_gift';
-      url.hash='';
-      if(url.protocol==='file:'||url.hostname==='localhost'||url.hostname==='127.0.0.1'){
-        toast(tt('Sharing requires a published HTTPS link','المشاركة تحتاج رابط HTTPS منشور'));return;
-      }
-      const msg=tt('Free games for your pet from PawApp! ','ألعاب مجانية لأليفك من باو أب! ')+url.href+' #PawPlayChallenge';
-      try{
-        if(navigator.share){await navigator.share({title:'Pop Up Play by PawApp',text:msg,url:url.href});return;}
-      }catch(err){if(err.name==='AbortError')return;}
-      window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
-    });
-
     // Camera and video sharing are local-only until the owner intentionally shares a clip.
     // Use an E.164 number (country code + subscriber, digits only), never pre-fill a private number.
     // The video remains on this device until the owner chooses to share.
@@ -743,7 +742,6 @@
       if(phoneCapture())launchNativeCamera();
       else startDesktopRecording();
     });
-    ca('#openCamera').addEventListener('click',openCameraSheet);
     ca('#cameraClose').addEventListener('click',closeCameraSheet);
     cameraDialog.addEventListener('keydown',e=>{if(e.key==='Escape')closeCameraSheet();});
     cameraFileInput.addEventListener('change',e=>{
@@ -768,12 +766,16 @@
       updateFocusLabels();
       q('#score').textContent=(mode==='pop'?tt('Bubbles: ','فقاعات: '):tt('Touches: ','اللمسات: '))+hits;
       q('#liveTapLabel').textContent=tt('Taps','لمسات');
-      q('#challengeHeading').textContent=tt('Great job!','برافو!');
-      q('#challengeScoreLabel').textContent=tt("Your pet's taps","لمسات أليفك");
-      q('#challengeDescription').textContent=tt('Want to join the challenge? Film your pet playing!','تبي تدخل التحدي؟ صوّر أليفك وهو يلعب!');
-      q('#challengeJoin').textContent=tt('Join the challenge','شارك بالتحدي');
-      q('#challengeLater').textContent=tt('Not now','مو الحين');
-      q('#challengeDisclaimer').textContent=tt('Competition details and prizes coming later.','تفاصيل المسابقة والجوائز نعلنها لاحقًا.');
+      q('#challengeHeading').textContent=tt('Round complete!','خلصت الجولة!');
+      q('#challengeScoreLabel').textContent=tt('Taps this round','لمسات هالجولة');
+      q('#challengeDescription').textContent=tt('Share your score, or add a video recorded during play.','شارك نتيجتك، أو أضف فيديو مصوّر أثناء اللعب.');
+      q('#challengeShareScore').textContent=tt('Share score','شارك النتيجة');
+      q('#challengeJoin').textContent=tt('Add recorded video','أضف فيديو مصوّر');
+      q('#challengePlayAgain').textContent=tt('Play again','العب مرة ثانية');
+      q('#challengeHelpTitle').textContent=tt('How do I record?','شلون أصوّر؟');
+      q('#challengeHelpBody').textContent=tt('On this phone, start Screen Recording before the next round. To film your pet touching the screen, use another phone.','بنفس التلفون: شغّل تسجيل الشاشة قبل الجولة الجاية. ولتصوير أليفك وهو يلمس الشاشة، استخدم تلفون ثاني.');
+      q('#challengeDisclaimer').textContent=tt('Just for fun. Competition rules and prizes coming later.','حاليًا للتجربة. شروط المسابقة والجوائز نعلنها لاحقًا.');
+      q('#finishRound').textContent=tt('Finish round','إنهاء الجولة');
       q('#cameraScoreLabel').textContent=tt('Game taps','لمسات اللعبة');
       renderChallengeScore();
       const tab=q('.discover-tab.active');const key=tab?.dataset.discover||'card';
