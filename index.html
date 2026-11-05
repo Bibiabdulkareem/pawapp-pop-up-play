@@ -170,6 +170,13 @@
     .camera-fallback button,.camera-fallback a{padding:9px 12px;border-radius:10px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;font-weight:750;text-decoration:none;font-size:12px;cursor:pointer}
     .camera-loading{position:absolute;inset:0;background:rgba(6,30,72,.85);color:#fff;display:flex;align-items:center;justify-content:center;z-index:4;font-weight:750;font-size:14px}
     .camera-actions button{min-width:0}
+    .social-share{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;width:min(100%,800px);align-self:center;margin:9px auto 0;flex:0 0 auto}
+    .social-share[hidden],.social-copy[hidden]{display:none!important}
+    .social-button{min-height:43px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:14px;font-weight:850;cursor:pointer;border:1px solid #c5d6ec;color:#163f7e;background:#fff}
+    .social-button:active{background:#e8f3ff}
+    .social-copy{display:block;align-self:center;border:0;background:none;color:#245da4;font-size:12px;font-weight:800;text-decoration:underline;text-underline-offset:3px;padding:5px 8px;cursor:pointer;flex:0 0 auto}
+    .camera-sheet.review .camera-subtitle{display:none}
+    @media(max-height:620px){.social-share{margin-top:5px}.social-button{min-height:38px}.camera-sheet.review .camera-consent{display:none}}
     .camera-direct-link{font-size:12px;font-weight:700;color:#124a92;text-decoration:underline;text-underline-offset:3px;text-align:center;display:block;margin:4px auto 0}
     .camera-direct-link[hidden]{display:none!important}
 
@@ -288,6 +295,11 @@
         <button type="button" class="camera-secondary" id="cameraChoose">Choose video</button>
         <button type="button" class="camera-primary" id="cameraPrimary">صوّر فيديو</button>
       </div>
+      <div class="social-share" id="socialShareRow" hidden>
+        <button type="button" class="social-button" id="shareInstagram">Instagram</button>
+        <button type="button" class="social-button" id="shareTikTok">TikTok</button>
+      </div>
+      <button type="button" class="social-copy" id="copyChallengeCaption" hidden>Copy caption &amp; mention</button>
       <input id="cameraFile" type="file" accept="video/*" capture="environment" hidden />
       <input id="cameraExternal" type="file" accept="video/*" hidden />
       <div id="cameraFallback" class="camera-fallback" hidden><span id="cameraFallbackText">Can’t share the file here? Save it, then attach it in our WhatsApp chat.</span><button type="button" id="cameraSave" class="camera-secondary">Save video</button><a class="camera-secondary" href="https://wa.me/96541117003?text=PawPlay%20Challenge" id="cameraChat">Open PawApp WhatsApp</a></div>
@@ -475,6 +487,9 @@
     function cameraStageSet(stage){
       cameraStage=stage;
       secondary.hidden=stage!=='review';choose.hidden=stage==='review'||stage==='recording';fallback.hidden=true;
+      ca('#socialShareRow').hidden=stage!=='review';
+      ca('#copyChallengeCaption').hidden=stage!=='review';
+      ca('.camera-sheet').classList.toggle('review',stage==='review');
       primary.textContent=stage==='review'?tt('WhatsApp PawApp','واتساب باو أب'):stage==='recording'?tt('Stop recording','إيقاف التسجيل'):tt('Record video','صوّر فيديو');
       ca('#cameraHint').textContent=stage==='review'?tt('Opens PawApp chat. Attach your video there.','يفتح محادثة باو أب. أرفق الفيديو هناك.'):stage==='recording'?tt('Stop or finish after 20 seconds.','أوقف التسجيل أو ينتهي بعد 20 ثانية.'):tt('Preview before sharing.','شاهد الفيديو قبل المشاركة.');
       ca('#cameraRecordingTag').hidden=stage!=='recording';
@@ -584,6 +599,53 @@
       const link='https://wa.me/'+PAWAPP_WHATSAPP_NUMBER+'?text='+encodeURIComponent(pawPlayCaption());
       ca('#cameraChat').href=link;
     }
+    // Confirmed Instagram account is linked from PawApp's official LinkedIn page.
+    // TikTok account handle has not been verified; use a generic hashtag until confirmed.
+    const PAWAPP_INSTAGRAM_HANDLE='@pawapp_';
+    const PAWAPP_TIKTOK_HANDLE='';
+    let lastSocialTarget='instagram';
+    function socialCaption(platform){
+      const mention=platform==='instagram'?PAWAPP_INSTAGRAM_HANDLE:PAWAPP_TIKTOK_HANDLE;
+      const postfix=mention?' '+mention:'';
+      return tt(
+        "PawPlay Challenge by PawApp! My pet's reaction 🐾"+postfix+" #PawPlayChallenge #PawApp",
+        "تحدي PawPlay من PawApp! شوفوا ردة فعل أليفي 🐾"+postfix+" #PawPlayChallenge #PawApp"
+      );
+    }
+    async function copySocialCaption(platform=lastSocialTarget){
+      const caption=socialCaption(platform);
+      try{
+        if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(caption);
+        else{
+          const input=document.createElement('textarea');input.value=caption;input.setAttribute('readonly','');input.style.position='fixed';input.style.opacity='0';
+          document.body.appendChild(input);input.select();const ok=document.execCommand('copy');input.remove();if(!ok)throw Error('Copy failed');
+        }
+        cameraStatus(tt('Caption copied. Paste it in your post and tag PawApp.','تم نسخ الكابشن. الصقه في المنشور وسوّ منشن لباو أب.'));
+      }catch(e){
+        cameraStatus(tt('Add #PawPlayChallenge and tag PawApp in the app.','حط #PawPlayChallenge ومنشن باو أب داخل التطبيق.'));
+      }
+    }
+    async function shareSocial(platform){
+      if(!cameraFile){cameraStatus(tt('Record or choose a video first.','صوّر أو اختر فيديو أولًا.'));return;}
+      lastSocialTarget=platform;
+      const name=platform==='instagram'?'Instagram':'TikTok';
+      cameraStatus(tt('Choose '+name+' from the share menu. Tag PawApp before posting.','اختر '+name+' من قائمة المشاركة. وسوّ منشن لباو أب قبل النشر.'));
+      try{
+        if(navigator.share&&navigator.canShare?.({files:[cameraFile]})){
+          // Browser cannot force a specific destination app or guarantee caption persistence.
+          await navigator.share({files:[cameraFile],text:socialCaption(platform),title:'PawPlay Challenge by PawApp'});
+          return;
+        }
+      }catch(err){if(err?.name==='AbortError')return;}
+      fallback.hidden=false;
+      ca('#cameraFallbackText').textContent=tt(
+        'Save the video, upload it to '+name+', then paste the challenge caption.',
+        'احفظ الفيديو وارفعه على '+name+' والصق كابشن التحدي.'
+      );
+    }
+    ca('#shareInstagram').addEventListener('click',()=>shareSocial('instagram'));
+    ca('#shareTikTok').addEventListener('click',()=>shareSocial('tiktok'));
+    ca('#copyChallengeCaption').addEventListener('click',()=>copySocialCaption(lastSocialTarget));
     function sendToBusiness(){
       if(!cameraFile){cameraStatus(tt('Record or choose a video first.','صوّر أو اختر فيديو أولًا.'));return;}
       // WhatsApp click-to-chat opens the exact business chat. It does NOT attach media or send messages.
@@ -640,6 +702,7 @@
       const v=details[key][language];const content=q('#discoverBody');content.replaceChildren();
       const h=document.createElement('strong'),p=document.createElement('p');h.textContent=v[0];p.textContent=v[1];content.append(h,p);
       cameraStageSet(cameraStage);
+      ca('#copyChallengeCaption').textContent=tt('Copy caption & mention','نسخ الكابشن والمنشن');
       updateBusinessChatLinks();
       updateBookingGift();
       try{localStorage.setItem('pawplay-language',language)}catch(e){}
