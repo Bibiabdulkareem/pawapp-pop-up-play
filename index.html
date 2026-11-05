@@ -138,6 +138,31 @@
     .camera-link{display:block;text-align:center;font-size:12px;margin-top:9px;color:#366aa2;text-decoration:underline}
     .whatsapp-direct{display:flex;align-items:center;justify-content:center;text-align:center;background:#e5f8eb!important;border:1px solid #67c58b!important;color:#0b713c!important;min-height:49px;text-decoration:none;width:100%;margin-top:9px;font-size:14px}
     @media(max-width:450px){.camera-sheet{padding:15px}.camera-sheet h2{font-size:21px}.camera-actions{gap:6px}.camera-actions button,.camera-actions label{font-size:12px}}
+
+    /* Simplified, stable full-screen recording/review flow */
+    .camera-overlay{padding:0;overflow:hidden;align-items:stretch;background:#ffffff}
+    .camera-sheet{width:100%;max-width:none;min-height:0;max-height:none;height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;gap:0;border-radius:0;box-shadow:none;padding:calc(env(safe-area-inset-top, 0px) + 12px) clamp(14px,3vw,28px) calc(env(safe-area-inset-bottom, 0px) + 12px);background:#f8fbff}
+    .camera-head{display:flex;align-items:center;justify-content:space-between;gap:12px;width:min(100%,800px);margin:0 auto 8px;min-height:42px}
+    .camera-brand{color:#0d4289;font-size:14px;font-weight:900;direction:ltr}
+    .camera-brand span{font-size:11px;color:#6c83a1;font-weight:600}
+    .camera-close{position:static;flex:0 0 auto;width:38px;height:38px;font-size:18px}
+    .camera-sheet h2{width:min(100%,800px);margin:0 auto 4px;font-size:clamp(20px,4.5vw,29px);text-align:center;line-height:1.35}
+    .camera-sheet p.camera-subtitle{width:min(100%,800px);margin:0 auto 10px;font-size:13px;color:#647d9e;text-align:center}
+    .camera-view{width:min(100%,800px);max-width:800px;flex:1;min-height:0;max-height:none;align-self:center;border-radius:18px;aspect-ratio:auto;background:#0b2859}
+    .camera-view video{object-fit:contain;width:100%;height:100%}
+    .camera-placeholder{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#ccdef3;font-size:14px}
+    .camera-placeholder svg{opacity:.75}
+    .camera-recording-tag{position:absolute;top:16px;right:16px;z-index:4;background:rgba(255,255,255,.95);border-radius:100px;padding:7px 13px;color:#b7202f;font-weight:800;font-size:13px;direction:rtl}
+    .camera-status{width:min(100%,800px);margin:10px auto 0;text-align:center;background:#eaf5ff;color:#174d83;border-radius:10px;padding:9px 12px;font-size:12px;line-height:1.6}
+    .camera-status[hidden],.camera-recording-tag[hidden]{display:none!important}
+    .camera-actions{width:min(100%,800px);align-self:center;display:flex;gap:10px;margin:12px auto 0;flex:0 0 auto}
+    .camera-actions button{flex:1;min-height:52px;font-size:clamp(13px,3vw,16px);border-radius:14px;font-weight:850}
+    .camera-actions button[hidden]{display:none!important}
+    .camera-primary{background:#ffd235;color:#0b438a;box-shadow:0 3px 0 #d9ae1e}
+    .camera-secondary{background:#e5f0fd;color:#124c93;border:1px solid #c2d7ef}
+    .camera-sheet p.camera-hint{width:min(100%,800px);font-size:12px;text-align:center;color:#556e8e;margin:10px auto 2px;line-height:1.6;flex:0 0 auto}
+    .camera-sheet p.camera-consent{width:min(100%,800px);font-size:10px;text-align:center;color:#8495ad;margin:2px auto 0;line-height:1.5;flex:0 0 auto}
+    @media(max-height:560px) and (orientation:landscape){.camera-head{min-height:32px;margin-bottom:3px}.camera-sheet h2{font-size:19px}.camera-sheet p.camera-subtitle{margin-bottom:4px}.camera-actions{margin-top:6px}.camera-actions button{min-height:40px}.camera-sheet p.camera-hint{margin-top:5px}.camera-consent{display:none}}
   </style>
 </head>
 <body>
@@ -216,33 +241,33 @@
 
   <div id="cameraOverlay" class="camera-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="cameraHeading">
     <div class="camera-sheet">
-      <button type="button" class="camera-close" id="cameraClose" aria-label="إغلاق التصوير">✕</button>
-      <span class="eyebrow">🎁 PawPlay Challenge by PawApp</span>
-      <h2 id="cameraHeading">ورّونا ردة فعل أليفكم! 🎬</h2>
-      <p>صوّري مقطع قصير مع لعبة دكتور بو، وبعدين شاركيه مع واتساب باو أب. التصوير والمشاركة اختياريان؛ ما يوصلنا أي فيديو إلا إذا اخترتي ترسلينه.</p>
+      <div class="camera-head">
+        <span class="camera-brand">PawPlay Challenge <span>by PawApp</span></span>
+        <button type="button" class="camera-close" id="cameraClose" aria-label="إغلاق">✕</button>
+      </div>
+      <h2 id="cameraHeading">صوّر ردة فعل أليفك</h2>
+      <p class="camera-subtitle">مقطع قصير من 10 إلى 20 ثانية.</p>
       <div class="camera-view">
-        <div id="cameraPlaceholder" class="camera-placeholder"><strong>🎥🐾</strong>اضغطي «افتحي الكاميرا» للتصوير أو اختاري فيديو جاهز.</div>
+        <div class="camera-placeholder" id="cameraPlaceholder">
+          <svg viewBox="0 0 64 64" width="58" height="58" fill="none" aria-hidden="true"><rect x="6" y="16" width="39" height="32" rx="8" stroke="currentColor" stroke-width="3"/><path d="M46 25l12-7v28l-12-7" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><circle cx="26" cy="32" r="7" stroke="currentColor" stroke-width="3"/></svg>
+          <span>جاهز للتصوير</span>
+        </div>
         <video id="cameraLive" autoplay muted playsinline hidden></video>
-        <video id="cameraRecorded" controls playsinline hidden></video>
+        <video id="cameraRecorded" controls playsinline preload="metadata" hidden></video>
+        <span id="cameraRecordingTag" class="camera-recording-tag" hidden>جاري التسجيل · <span id="cameraClock">0:00</span></span>
       </div>
-      <div class="camera-status" id="cameraStatus" role="status" aria-live="polite">نصيحة: صوّري 10–20 ثانية، وخلّي اللعبة على شاشة ثانية إذا أمكن.</div>
+      <div class="camera-status" id="cameraStatus" role="status" aria-live="polite" hidden></div>
       <div class="camera-actions">
-        <button type="button" class="camera-primary" id="cameraStart">📷 افتحي الكاميرا</button>
-        <label for="cameraFile" class="camera-secondary">📁 صوّري أو اختاري فيديو</label>
-        <input id="cameraFile" type="file" accept="video/*" capture="environment" hidden />
-        <button type="button" class="camera-primary" id="recordStart" disabled>⏺ ابدئي التسجيل</button>
-        <button type="button" class="camera-secondary" id="recordStop" disabled>⏹ إيقاف التسجيل</button>
-        <button type="button" class="camera-primary" id="cameraShare" disabled>📤 شاركي الفيديو واختاري محادثة باو أب</button>
-        <button type="button" class="camera-secondary" id="cameraDownload" disabled>⬇ احفظي الفيديو</button>
+        <button type="button" class="camera-secondary" id="cameraSecondary" hidden>إعادة التصوير</button>
+        <button type="button" class="camera-primary" id="cameraPrimary">صوّر فيديو</button>
       </div>
-      <p class="camera-note" id="waNotice"><b>عشان يوصلنا الفيديو مو لنفسج:</b> ١) احفظي الفيديو إذا تبين تحتفظين فيه. ٢) افتحي محادثة باو أب بالزر الأخضر، وبعدها ارجعي للعبة. ٣) اضغطي «شاركي الفيديو»، واختاري WhatsApp ثم <b>PawApp (+965 41117003)</b> واضغطي إرسال. اختيار المحادثة وإرسال الفيديو يتم من واتساب بنفسج.</p>
-      <a class="smallbutton whatsapp-direct" id="cameraWhatsapp" href="https://wa.me/96541117003" aria-label="فتح واتساب باو أب الرسمي على الرقم 96541117003">💬 افتحي واتساب باو أب — +965 41117003 ↗</a>
-      <p style="font-size:12px;margin:7px 0 0">إذا ما فتح التطبيق، افتحي الرابط من Safari أو Chrome. تنبيه: ملف الفيديو ما ينرفق تلقائيًا برابط واتساب.</p>
-      <p style="font-size:11px">إرسال الفيديو لا يعني الموافقة على نشره في حساباتنا. نطلب موافقة منفصلة إذا اخترناه للحملة.</p>
+      <input id="cameraFile" type="file" accept="video/*" capture="environment" hidden />
+      <p class="camera-hint" id="cameraHint">اختار التصوير، وبعده شوف المقطع قبل المشاركة.</p>
+      <p class="camera-consent">إرسال الفيديو لا يعني الموافقة على نشره. نطلب الإذن قبل استخدامه بالإعلانات.</p>
     </div>
   </div>
   
-  <div id="toast" role="status" aria-live="polite"></div>
+    <div id="toast" role="status" aria-live="polite"></div>
   <script>
   (()=>{
     'use strict';
@@ -375,119 +400,144 @@
 
     // Camera and video sharing are local-only until the owner intentionally shares a clip.
     // Use an E.164 number (country code + subscriber, digits only), never pre-fill a private number.
-    const PAWAPP_WHATSAPP_NUMBER='96541117003'; // official PawApp Business WhatsApp — provided by the owner
-    const ca=s=>document.querySelector(s),cameraDialog=ca('#cameraOverlay'),cameraLive=ca('#cameraLive'),cameraRecorded=ca('#cameraRecorded');
-    let cameraStream=null,cameraRecorder=null,cameraChunks=[],cameraFile=null,cameraObjectUrl=null,cameraTimer=null,cameraPriorFocus=null;
-    const cameraStatus=message=>{ca('#cameraStatus').textContent=message};
-    function cleanupCameraStream(){
-      if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}
-      cameraLive.srcObject=null;
+    // The video remains on this device until the owner chooses to share.
+    // WhatsApp click-to-chat selects the business recipient, but does NOT attach the video.
+    const PAWAPP_WHATSAPP_NUMBER='96541117003';
+    const ca=s=>document.querySelector(s);
+    const cameraDialog=ca('#cameraOverlay'),cameraLive=ca('#cameraLive'),cameraRecorded=ca('#cameraRecorded');
+    const primary=ca('#cameraPrimary'),secondary=ca('#cameraSecondary'),cameraFileInput=ca('#cameraFile');
+    let cameraStream=null,cameraRecorder=null,cameraChunks=[],cameraFile=null,cameraObjectUrl=null,cameraTimer=null,cameraClockTimer=null,cameraStartedAt=0,cameraPriorFocus=null,cameraStage='idle',cameraSession=0;
+    const phoneCapture=()=>/Android|iPhone|iPad|iPod|HarmonyOS|HUAWEI/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    function cameraStatus(message=''){const el=ca('#cameraStatus');el.textContent=message;el.hidden=!message;}
+    function cameraStageSet(stage){
+      cameraStage=stage;
+      secondary.hidden=stage!=='review';
+      primary.textContent=stage==='review'?'إرسال إلى باو أب':stage==='recording'?'إيقاف التصوير':'صوّر فيديو';
+      ca('#cameraHint').textContent=stage==='review'?'يفتح واتساب على رقم باو أب. أرفق الفيديو من ملفات جهازك ثم اضغط إرسال.':stage==='recording'?'اضغط إيقاف التصوير، أو ينتهي التسجيل تلقائيًا بعد 20 ثانية.':'بعد التصوير، شاهد الفيديو كاملًا قبل ما تقرر ترسله.';
+      ca('#cameraRecordingTag').hidden=stage!=='recording';
+    }
+    function stopCameraTracks(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}cameraLive.srcObject=null;}
+    function clearCameraTimer(){clearTimeout(cameraTimer);clearInterval(cameraClockTimer);cameraTimer=null;cameraClockTimer=null;}
+    function discardLiveRecording(){
+      cameraSession++;
+      clearCameraTimer();
+      if(cameraRecorder&&cameraRecorder.state==='recording'){cameraRecorder.onstop=null;try{cameraRecorder.stop()}catch(e){}}
+      cameraRecorder=null;stopCameraTracks();
     }
     function showVideoFile(file){
-      if(!file||!file.type.startsWith('video/')){cameraStatus('اختاري ملف فيديو صالح.');return}
-      if(file.size>85*1024*1024){cameraStatus('الفيديو كبير. اختاري مقطع أقصر من 20 ثانية.');return}
+      if(!file||(!file.type.startsWith('video/')&&!/\.(mp4|mov|webm|m4v)$/i.test(file.name))){cameraStatus('اختار فيديو صالح.');return;}
+      if(file.size>85*1024*1024){cameraStatus('الفيديو كبير. جرّب مقطع أقصر من 20 ثانية.');return;}
+      clearCameraTimer();stopCameraTracks();
       cameraFile=file;
+      cameraRecorded.pause();
       if(cameraObjectUrl)URL.revokeObjectURL(cameraObjectUrl);
       cameraObjectUrl=URL.createObjectURL(file);
       cameraRecorded.src=cameraObjectUrl;
-      cameraRecorded.hidden=false;
-      cameraLive.hidden=true;
-      ca('#cameraPlaceholder').hidden=true;
-      ca('#cameraShare').disabled=false;
-      ca('#cameraDownload').disabled=false;
-      cameraStatus('الفيديو جاهز. افتحي محادثة باو أب أولًا، ثم اختاري مشاركة الفيديو ← WhatsApp ← PawApp (+965 41117003).');
+      cameraRecorded.hidden=false;cameraLive.hidden=true;ca('#cameraPlaceholder').hidden=true;
+      cameraRecorded.load();
+      cameraRecorded.onloadedmetadata=()=>{try{if(cameraRecorded.duration>.05)cameraRecorded.currentTime=.05;}catch(e){}};
+      cameraStageSet('review');cameraStatus('');
     }
     function openCameraSheet(){
       cameraPriorFocus=document.activeElement;
-      cameraDialog.hidden=false;
-      document.body.style.overflow='hidden';
-      ca('#cameraClose').focus();
+      cameraDialog.hidden=false;document.body.style.overflow='hidden';
+      cameraStageSet('idle');cameraStatus('');
+      cameraDialog.querySelector('#cameraClose').focus();
     }
     function closeCameraSheet(){
-      if(cameraRecorder&&cameraRecorder.state==='recording')cameraRecorder.stop();
-      clearTimeout(cameraTimer);cleanupCameraStream();
-      cameraDialog.hidden=true;document.body.style.overflow='';
+      discardLiveRecording();
+      cameraRecorded.pause();cameraDialog.hidden=true;document.body.style.overflow='';
       if(cameraPriorFocus?.focus)cameraPriorFocus.focus();
     }
-    async function beginCamera(){
-      cleanupCameraStream();
-      if(!navigator.mediaDevices?.getUserMedia){
-        cameraStatus('على هذا الجهاز افتحي التصوير من «صوّري أو اختاري فيديو». كاميرا المتصفح تحتاج HTTPS.');
-        ca('#cameraFile').click();return;
+    function launchNativeCamera(){
+      // iOS/iPadOS/Android/Huawei use their familiar camera UI; selecting "Use Video"
+      // brings the completed clip back to a stable full-screen preview.
+      cameraFileInput.value='';
+      cameraFileInput.click();
+    }
+    async function startDesktopRecording(){
+      if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
+        cameraStatus('الكاميرا المباشرة غير مدعومة؛ اختار الفيديو من الجهاز.');
+        launchNativeCamera();return;
       }
+      const session=++cameraSession;
       try{
-        cameraStatus('جاري طلب إذن الكاميرا…');
-        try{cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:true})}
-        catch(e){cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false})}
-        cameraRecorded.hidden=true;cameraRecorded.pause();cameraLive.hidden=false;
-        ca('#cameraPlaceholder').hidden=true;
-        cameraLive.srcObject=cameraStream;
-        try{await cameraLive.play()}catch(e){}
-        ca('#recordStart').disabled=!('MediaRecorder' in window);
-        ca('#recordStop').disabled=true;
-        cameraStatus('الكاميرا شغالة. اضغطي «ابدئي التسجيل» أو اختاري التصوير من كاميرا الهاتف.');
-        if(!('MediaRecorder' in window))cameraStatus('هذا المتصفح لا يدعم التسجيل المباشر؛ استخدمي «صوّري أو اختاري فيديو».');
-      }catch(e){cleanupCameraStream();cameraStatus('تعذر فتح الكاميرا. اسمحي بإذن الكاميرا، أو اختاري «صوّري أو اختاري فيديو».')}
+        cameraStatus('اسمح للمتصفح باستخدام الكاميرا.');
+        let stream;
+        try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:true});}
+        catch(e){stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});}
+        if(cameraDialog.hidden||session!==cameraSession){stream.getTracks().forEach(t=>t.stop());return;}
+        cameraStream=stream;
+        const types=['video/mp4','video/webm;codecs=vp8,opus','video/webm;codecs=vp8','video/webm'];
+        const mime=types.find(t=>MediaRecorder.isTypeSupported(t));
+        cameraRecorder=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:1800000}:{videoBitsPerSecond:1800000});
+        const recorder=cameraRecorder;
+        cameraChunks=[];
+        recorder.ondataavailable=e=>{if(e.data?.size>0)cameraChunks.push(e.data);};
+        recorder.onstop=()=>{
+          clearCameraTimer();
+          if(session!==cameraSession)return;
+          const finalMime=recorder.mimeType||mime||'video/webm';
+          const blob=new Blob(cameraChunks,{type:finalMime});
+          cameraRecorder=null;stopCameraTracks();
+          if(blob.size>0){
+            const ext=finalMime.includes('mp4')?'mp4':'webm';
+            showVideoFile(new File([blob],'pawplay-challenge.'+ext,{type:finalMime}));
+          }else{cameraStageSet('idle');cameraStatus('ما قدرنا نحفظ الفيديو. حاول مرة ثانية.');}
+        };
+        recorder.onerror=()=>cameraStatus('صار خطأ بالتسجيل. حاول مرة ثانية.');
+        cameraRecorded.pause();cameraRecorded.hidden=true;
+        cameraLive.hidden=false;ca('#cameraPlaceholder').hidden=true;
+        cameraLive.srcObject=stream;
+        try{await cameraLive.play();}catch(e){}
+        if(session!==cameraSession)return;
+        recorder.start(250);
+        cameraStageSet('recording');cameraStatus('');
+        cameraStartedAt=Date.now();ca('#cameraClock').textContent='0:00';
+        cameraClockTimer=setInterval(()=>{const seconds=Math.min(20,Math.floor((Date.now()-cameraStartedAt)/1000));ca('#cameraClock').textContent='0:'+String(seconds).padStart(2,'0');},300);
+        cameraTimer=setTimeout(()=>{if(recorder.state==='recording')recorder.stop();},20000);
+      }catch(e){
+        if(session!==cameraSession)return;
+        stopCameraTracks();cameraStageSet('idle');
+        cameraStatus('تعذر فتح الكاميرا. يمكنك اختيار فيديو من الجهاز.');
+        // Native chooser is not auto-opened after an async permission error.
+        primary.textContent='اختيار فيديو';
+      }
     }
-    function beginRecord(){
-      if(!cameraStream||!window.MediaRecorder)return;
-      cameraChunks=[];
-      const types=['video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
-      const mime=types.find(t=>MediaRecorder.isTypeSupported(t));
-      try{cameraRecorder=new MediaRecorder(cameraStream,mime?{mimeType:mime,videoBitsPerSecond:1800000}:{videoBitsPerSecond:1800000})}
-      catch(e){cameraStatus('التسجيل غير مدعوم بهالإعدادات. جربي كاميرا الجهاز.');return}
-      cameraRecorder.ondataavailable=e=>{if(e.data&&e.data.size>0)cameraChunks.push(e.data)};
-      cameraRecorder.onstop=()=>{
-        clearTimeout(cameraTimer);
-        const finalMime=cameraRecorder.mimeType||mime||'video/webm';
-        const ext=finalMime.includes('mp4')?'mp4':'webm';
-        const blob=new Blob(cameraChunks,{type:finalMime});
-        cleanupCameraStream();
-        ca('#recordStart').disabled=true;ca('#recordStop').disabled=true;
-        if(blob.size>0)showVideoFile(new File([blob],'pawplay-challenge.'+ext,{type:finalMime}));
-        else cameraStatus('ما قدرنا نحفظ التسجيل. استخدمي كاميرا الجهاز.');
-      };
-      cameraRecorder.onerror=()=>cameraStatus('صار خطأ أثناء التسجيل. جرّبي كاميرا الجهاز.');
-      cameraRecorder.start(250);
-      ca('#recordStart').disabled=true;ca('#recordStop').disabled=false;
-      cameraStatus('🔴 جاري التصوير… حد أقصى 20 ثانية.');
-      cameraTimer=setTimeout(()=>{if(cameraRecorder?.state==='recording')cameraRecorder.stop()},20000);
+    function stopDesktopRecording(){
+      if(cameraRecorder?.state==='recording'){cameraStatus('جاري تجهيز الفيديو…');cameraRecorder.stop();}
     }
-    function stopRecord(){if(cameraRecorder?.state==='recording')cameraRecorder.stop()}
+    function sendToBusiness(){
+      if(!cameraFile){cameraStatus('صوّر الفيديو أولًا.');return;}
+      // Best-effort local save before opening WhatsApp. The owner must attach the file
+      // in WhatsApp and press Send — browser deep links cannot do either automatically.
+      const link=document.createElement('a');
+      link.href=cameraObjectUrl;link.download=cameraFile.name||'pawplay-challenge.mp4';
+      document.body.appendChild(link);link.click();link.remove();
+      const msg='هلا PawApp، هذي مشاركتي في PawPlay Challenge. راح أرفق الفيديو الحين.';
+      const waUrl='https://wa.me/'+PAWAPP_WHATSAPP_NUMBER+'?text='+encodeURIComponent(msg);
+      window.location.assign(waUrl);
+    }
+    primary.addEventListener('click',()=>{
+      if(cameraStage==='review'){sendToBusiness();return;}
+      if(cameraStage==='recording'){stopDesktopRecording();return;}
+      if(primary.textContent==='اختيار فيديو'||phoneCapture()){launchNativeCamera();return;}
+      startDesktopRecording();
+    });
+    secondary.addEventListener('click',()=>{
+      cameraStatus('');
+      cameraRecorded.pause();
+      if(phoneCapture())launchNativeCamera();
+      else startDesktopRecording();
+    });
     ca('#openCamera').addEventListener('click',openCameraSheet);
     ca('#cameraClose').addEventListener('click',closeCameraSheet);
-    cameraDialog.addEventListener('click',e=>{if(e.target===cameraDialog)closeCameraSheet()});
-    cameraDialog.addEventListener('keydown',e=>{if(e.key==='Escape')closeCameraSheet()});
-    ca('#cameraStart').addEventListener('click',beginCamera);
-    ca('#recordStart').addEventListener('click',beginRecord);
-    ca('#recordStop').addEventListener('click',stopRecord);
-    ca('#cameraFile').addEventListener('change',e=>{
-      const f=e.target.files?.[0];if(!f)return;
-      if(cameraRecorder?.state==='recording')cameraRecorder.stop();
-      cleanupCameraStream();ca('#recordStart').disabled=true;ca('#recordStop').disabled=true;
-      showVideoFile(f);
-    });
-    ca('#cameraShare').addEventListener('click',async()=>{
-      if(!cameraFile)return;
-      const msg='🐾 #PawPlayChallenge من PawApp — هذي ردة فعل أليفي!';
-      try{
-        if(navigator.share&&navigator.canShare?.({files:[cameraFile]})){
-          await navigator.share({files:[cameraFile],title:'PawPlay Challenge by PawApp',text:msg});
-          cameraStatus('من قائمة المشاركة اختاري WhatsApp ثم محادثة PawApp (+965 41117003) واضغطي إرسال.');return
-        }
-        cameraStatus('هذا المتصفح ما يدعم مشاركة ملف الفيديو مباشرة. احفظي الفيديو، وافتحي محادثة باو أب من الزر الأخضر وأرفقيه يدويًا.');
-      }catch(e){if(e.name!=='AbortError')cameraStatus('ما تمت المشاركة. احفظي الفيديو وأرفقيه عبر واتساب.')}
-    });
-    ca('#cameraDownload').addEventListener('click',()=>{
-      if(!cameraFile)return;
-      const link=document.createElement('a');link.href=cameraObjectUrl;link.download=cameraFile.name||'pawplay-challenge.mp4';document.body.appendChild(link);link.click();link.remove();
-    });
-    // A native hyperlink works more reliably than window.open in mobile in-app browsers.
-    // WhatsApp's public deep link can preselect a chat, but cannot attach or send a browser video.
-    const waMessage='هلا باو أب 🐾 هذي مشاركتي بتحدي PawPlay! راح أرفق الفيديو بنفسي.';
-    ca('#cameraWhatsapp').href='https://wa.me/'+PAWAPP_WHATSAPP_NUMBER+'?text='+encodeURIComponent(waMessage);
-    ca('#cameraWhatsapp').addEventListener('click',()=>{
-      cameraStatus('محادثتج راح تفتح على +965 41117003. ارجعي للصفحة، ثم شاركي ملف الفيديو واختاري PawApp كمستلم.');
+    cameraDialog.addEventListener('keydown',e=>{if(e.key==='Escape')closeCameraSheet();});
+    cameraFileInput.addEventListener('change',e=>{
+      const file=e.target.files?.[0];
+      if(!file)return;
+      discardLiveRecording();
+      showVideoFile(file);
     });
 
     window.addEventListener('resize',()=>{if(mode)resize()});window.addEventListener('keydown',e=>{if(e.key==='Escape'&&mode)close()});
