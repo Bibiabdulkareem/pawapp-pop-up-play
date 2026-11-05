@@ -170,6 +170,8 @@
     .camera-fallback button,.camera-fallback a{padding:9px 12px;border-radius:10px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;font-weight:750;text-decoration:none;font-size:12px;cursor:pointer}
     .camera-loading{position:absolute;inset:0;background:rgba(6,30,72,.85);color:#fff;display:flex;align-items:center;justify-content:center;z-index:4;font-weight:750;font-size:14px}
     .camera-actions button{min-width:0}
+    .camera-direct-link{font-size:12px;font-weight:700;color:#124a92;text-decoration:underline;text-underline-offset:3px;text-align:center;display:block;margin:4px auto 0}
+    .camera-direct-link[hidden]{display:none!important}
 
     .header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
     #languageSwitcher{border:1px solid #b9d4f1;background:#fff;color:#0a408a;border-radius:12px;min-height:38px;font:700 13px system-ui,sans-serif;padding:6px 10px}
@@ -277,7 +279,8 @@
       <input id="cameraFile" type="file" accept="video/*" capture="environment" hidden />
       <input id="cameraExternal" type="file" accept="video/*" hidden />
       <div id="cameraFallback" class="camera-fallback" hidden><span id="cameraFallbackText">Can’t share the file here? Save it, then attach it in our WhatsApp chat.</span><button type="button" id="cameraSave" class="camera-secondary">Save video</button><a class="camera-secondary" href="https://wa.me/96541117003?text=PawPlay%20Challenge" id="cameraChat">Open PawApp WhatsApp</a></div>
-      <p class="camera-hint" id="cameraHint">اختار التصوير، وبعده شوف المقطع قبل المشاركة.</p>
+      <p class="camera-hint" id="cameraHint">Preview your video before sharing.</p>
+      <a class="camera-direct-link" id="cameraDirectChat" href="https://wa.me/96541117003" hidden>Open PawApp chat (attach video manually)</a>
       <p class="camera-consent">إرسال الفيديو لا يعني الموافقة على نشره. نطلب الإذن قبل استخدامه بالإعلانات.</p>
     </div>
   </div>
@@ -430,8 +433,9 @@
     function cameraStageSet(stage){
       cameraStage=stage;
       secondary.hidden=stage!=='review';choose.hidden=stage==='review'||stage==='recording';fallback.hidden=true;
-      primary.textContent=stage==='review'?tt('Share video','شارك الفيديو'):stage==='recording'?tt('Stop recording','إيقاف التسجيل'):tt('Record video','صوّر فيديو');
-      ca('#cameraHint').textContent=stage==='review'?tt('Choose WhatsApp, then PawApp (+965 41117003).','اختر واتساب ثم PawApp (+965 41117003).'):stage==='recording'?tt('Stop or finish after 20 seconds.','أوقف التسجيل أو ينتهي بعد 20 ثانية.'):tt('Preview before sharing.','شاهد الفيديو قبل المشاركة.');
+      ca('#cameraDirectChat').hidden=stage!=='review';
+      primary.textContent=stage==='review'?tt('Share video + caption','شارك الفيديو مع الكابشن'):stage==='recording'?tt('Stop recording','إيقاف التسجيل'):tt('Record video','صوّر فيديو');
+      ca('#cameraHint').textContent=stage==='review'?tt('In WhatsApp, search PawApp +965 41117003 — not Message Yourself.','في واتساب ابحث عن PawApp +965 41117003، مو محادثتك مع نفسك.'):stage==='recording'?tt('Stop or finish after 20 seconds.','أوقف التسجيل أو ينتهي بعد 20 ثانية.'):tt('Preview before sharing.','شاهد الفيديو قبل المشاركة.');
       ca('#cameraRecordingTag').hidden=stage!=='recording';
     }
     function stopCameraTracks(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}cameraLive.srcObject=null;}
@@ -529,20 +533,37 @@
     function stopDesktopRecording(){
       if(cameraRecorder?.state==='recording'){cameraStatus(tt('Preparing video…','جاري تجهيز الفيديو…'));cameraRecorder.stop();}
     }
+    function pawPlayCaption(){
+      return tt(
+        "🐾 #PawPlayChallenge by PawApp — Here's my pet's reaction!",
+        "🐾 #PawPlayChallenge من PawApp — هذي ردة فعل أليفي!"
+      );
+    }
+    function updateBusinessChatLinks(){
+      const link='https://wa.me/'+PAWAPP_WHATSAPP_NUMBER+'?text='+encodeURIComponent(pawPlayCaption());
+      ca('#cameraDirectChat').href=link;
+      ca('#cameraChat').href=link;
+      ca('#cameraDirectChat').textContent=tt('Open PawApp chat (attach video manually)','افتح محادثة باو أب (أرفق الفيديو بنفسك)');
+    }
     async function sendToBusiness(){
       if(!cameraFile){cameraStatus(tt('Record or choose a video first.','صوّر أو اختر فيديو أولًا.'));return;}
-      // The Web Share API shares the actual video file. Recipient selection stays in WhatsApp.
-      // A wa.me contact link cannot attach a media file.
+      // Share the video FILE plus the original challenge caption, not a text-only link.
+      // WhatsApp decides the recipient after the user selects a chat; a web site cannot preselect it.
       fallback.hidden=true;
+      cameraStatus(tt('In WhatsApp select PawApp (+965 41117003), not Message Yourself.','في واتساب اختر PawApp (+965 41117003)، مو محادثتك مع نفسك.'));
       try{
         if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[cameraFile]}))){
-          await navigator.share({files:[cameraFile],title:'PawPlay Challenge by PawApp'});
-          cameraStatus(tt('Choose WhatsApp, then PawApp (+965 41117003), and tap Send.','اختر واتساب ثم PawApp (+965 41117003) واضغط إرسال.'));
+          await navigator.share({
+            files:[cameraFile],
+            title:'PawPlay Challenge by PawApp',
+            text:pawPlayCaption()
+          });
+          cameraStatus(tt('The share menu closed. Confirm the video was sent to PawApp in WhatsApp.','انغلقت شاشة المشاركة. تأكد إن الفيديو انرسل لمحادثة باو أب في واتساب.'));
           return;
         }
       }catch(err){if(err?.name==='AbortError')return;}
       fallback.hidden=false;
-      cameraStatus(tt('Save the video, then attach it in our WhatsApp chat.','احفظ الفيديو ثم أرفقه في محادثة واتساب باو أب.'));
+      cameraStatus(tt('Sharing video files is unavailable. Save the clip and attach it to PawApp WhatsApp.','مشاركة ملفات الفيديو غير متاحة. احفظ المقطع وأرفقه في واتساب باو أب.'));
     }
     ca('#cameraSave').addEventListener('click',()=>{
       if(!cameraFile)return;
@@ -590,6 +611,7 @@
       const v=details[key][language];const content=q('#discoverBody');content.replaceChildren();
       const h=document.createElement('strong'),p=document.createElement('p');h.textContent=v[0];p.textContent=v[1];content.append(h,p);
       cameraStageSet(cameraStage);
+      updateBusinessChatLinks();
       updateBookingGift();
       try{localStorage.setItem('pawplay-language',language)}catch(e){}
     }
