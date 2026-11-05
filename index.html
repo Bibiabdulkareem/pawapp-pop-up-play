@@ -292,12 +292,12 @@
     const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
     function toast(text){const e=q('#toast');e.textContent=text;e.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('show'),2300)}
     function resize(){const r=area.getBoundingClientRect(),oldW=w,oldH=h;w=Math.max(1,r.width);h=Math.max(1,r.height);ratio=Math.max(.8,Math.min(window.devicePixelRatio||1,2,Math.sqrt(3500000/(w*h))));canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);if(mode==='art')renderArt();if(ball){ball.r=clamp(Math.min(w,h)*.09,35,w>=700?79:56);ball.x=clamp(oldW>1?ball.x*w/oldW:ball.x,ball.r,w-ball.r);ball.y=clamp(oldH>1?ball.y*h/oldH:ball.y,ball.r,h-ball.r)}if(mode==='pop'&&oldW>1&&oldH>1){bubbles.forEach(b=>{b.x=b.x*w/oldW;b.y=b.y*h/oldH;b.r=clamp(Math.min(w,h)*.088,29,w>=700?67:53)})}}
-    function open(type){cancelAnimationFrame(frameId);gameStartedAt=Date.now();mode=type;game.classList.add('on');document.body.style.overflow='hidden';q('#activeTitle').textContent=type==='chase'?'🎾 Paw Chase':type==='art'?'🎨 Paw Art':'🫧 Paw Pop';q('#chaseTools').classList.toggle('hidden',type!=='chase');q('#artTools').classList.toggle('hidden',type!=='art');q('#popTools').classList.toggle('hidden',type!=='pop');q('#soundTools').classList.toggle('hidden',type==='art');hint.textContent=type==='chase'?'خلّي حيوانج يطارد الكرة براحته':type==='art'?'كل لمسة ترسم لون جديد':'المسي الفقاعات لتنفجر ✨';hint.style.display='block';setTimeout(()=>{if(game.classList.contains('on'))hint.style.display='none'},3600);resize();if(type==='chase')resetChase();else if(type==='art'){marks=[];hits=0;score.textContent='اللمسات: 0';renderArt()}else resetPop()}
+    function open(type){cancelAnimationFrame(frameId);gameStartedAt=Date.now();mode=type;game.classList.add('on');document.body.style.overflow='hidden';q('#activeTitle').textContent=type==='chase'?'Paw Chase':type==='art'?'Paw Art':'Paw Pop';q('#chaseTools').classList.toggle('hidden',type!=='chase');q('#artTools').classList.toggle('hidden',type!=='art');q('#popTools').classList.toggle('hidden',type!=='pop');q('#soundTools').classList.toggle('hidden',type==='art');hint.textContent=type==='chase'?tt('Follow the ball','اتبع الكرة'):type==='art'?tt('Touch to paint','المس للرسم'):tt('Pop the bubbles','فرقّع الفقاعات');hint.style.display='block';setTimeout(()=>{if(game.classList.contains('on'))hint.style.display='none'},3600);resize();if(type==='chase')resetChase();else if(type==='art'){marks=[];hits=0;score.textContent=tt('Touches: 0','اللمسات: 0');renderArt()}else resetPop()}
     function close(){const elapsed=Date.now()-gameStartedAt,wasPlayed=hits>0||elapsed>12000;game.classList.remove('on');if(document.fullscreenElement===game&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});document.body.style.overflow='';mode='';cancelAnimationFrame(frameId);if(wasPlayed&&!promoShown){promoShown=true;showDiscover()}}
-    function resetChase(){hits=0;score.textContent='اللمسات: 0';const r=clamp(Math.min(w,h)*.09,35,w>=700?79:56);ball={x:w*.5,y:h*.52,vx:1.55,vy:1.15,r,rotation:0};particles=[];lastTime=0;cancelAnimationFrame(frameId);frameId=requestAnimationFrame(loop)}
+    function resetChase(){hits=0;score.textContent=tt('Touches: 0','اللمسات: 0');const r=clamp(Math.min(w,h)*.09,35,w>=700?79:56);ball={x:w*.5,y:h*.52,vx:1.55,vy:1.15,r,rotation:0};particles=[];lastTime=0;cancelAnimationFrame(frameId);frameId=requestAnimationFrame(loop)}
     function newBubble(inView=true){let r=clamp(Math.min(w,h)*(.07+Math.random()*.038),26,w>=700?68:53);return {x:r+Math.random()*Math.max(1,w-2*r),y:inView?r+Math.random()*Math.max(1,h-2*r):h+r+Math.random()*h*.25,vx:(Math.random()-.5)*.55,vy:-.35-Math.random()*.55,r,hue:[195,44,303,160,205][Math.floor(Math.random()*5)],phase:Math.random()*6.28}}
-    function resetPop(){hits=0;score.textContent='فقاعات: 0';particles=[];bubbles=Array.from({length:w<420?6:w<700?9:Math.min(17,Math.max(10,Math.round(w*h/65000)))},()=>newBubble());lastTime=0;lastAutoSound=0;cancelAnimationFrame(frameId);frameId=requestAnimationFrame(loop)}
-    function audioReady(){try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx}catch(e){toast('الصوت غير مدعوم في هالمعاينة');return null}}
+    function resetPop(){hits=0;score.textContent=tt('Bubbles: 0','فقاعات: 0');particles=[];bubbles=Array.from({length:w<420?6:w<700?9:Math.min(17,Math.max(10,Math.round(w*h/65000)))},()=>newBubble());lastTime=0;lastAutoSound=0;cancelAnimationFrame(frameId);frameId=requestAnimationFrame(loop)}
+    function audioReady(){try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx}catch(e){toast(tt('Sound is not supported here','الصوت غير مدعوم هنا'));return null}}
     function tone(start,duration,frequency,end,type,vol,when=0){
       const a=audioReady();if(!a)return;
       const t=a.currentTime+when,osc=a.createOscillator(),gain=a.createGain();
@@ -342,28 +342,28 @@
     function stamp(x,y){const r=clamp(Math.min(w,h)*.047,17,34);for(let i=0;i<6;i++){const dx=i===0?0:(Math.random()-.5)*r*2.6,dy=i===0?0:(Math.random()-.5)*r*2.6;marks.push({x:(x+dx)/w,y:(y+dy)/h,r:i===0?r:3+Math.random()*r*.48,c:color,a:i===0?.6:.44+Math.random()*.4})}if(marks.length>2200)marks.splice(0,200);renderArt()}
     function point(e){const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}}
     canvas.addEventListener('pointerdown',e=>{if(!mode)return;e.preventDefault();try{canvas.setPointerCapture(e.pointerId)}catch(err){}const p=point(e);
-      if(mode==='chase'){if(ball&&Math.hypot(p.x-ball.x,p.y-ball.y)<ball.r+38){hits++;score.textContent='اللمسات: '+hits;playSound();burst(ball.x,ball.y,48);ball.x=ball.r+Math.random()*Math.max(1,w-2*ball.r);ball.y=ball.r+Math.random()*Math.max(1,h-2*ball.r);ball.vx=-ball.vx}}
-      else if(mode==='pop'){const index=bubbles.findIndex(b=>Math.hypot(p.x-b.x,p.y-b.y)<b.r+18);if(index>=0){const b=bubbles[index];hits++;score.textContent='فقاعات: '+hits;burst(b.x,b.y,b.hue);playSound();bubbles[index]=newBubble(false)}}
-      else{draw=true;hits++;score.textContent='اللمسات: '+hits;stamp(p.x,p.y)}});
+      if(mode==='chase'){if(ball&&Math.hypot(p.x-ball.x,p.y-ball.y)<ball.r+38){hits++;score.textContent=tt('Touches: ','اللمسات: ')+hits;playSound();burst(ball.x,ball.y,48);ball.x=ball.r+Math.random()*Math.max(1,w-2*ball.r);ball.y=ball.r+Math.random()*Math.max(1,h-2*ball.r);ball.vx=-ball.vx}}
+      else if(mode==='pop'){const index=bubbles.findIndex(b=>Math.hypot(p.x-b.x,p.y-b.y)<b.r+18);if(index>=0){const b=bubbles[index];hits++;score.textContent=tt('Bubbles: ','فقاعات: ')+hits;burst(b.x,b.y,b.hue);playSound();bubbles[index]=newBubble(false)}}
+      else{draw=true;hits++;score.textContent=tt('Touches: ','اللمسات: ')+hits;stamp(p.x,p.y)}});
     canvas.addEventListener('pointermove',e=>{if(mode!=='art'||!draw)return;e.preventDefault();const p=point(e);stamp(p.x,p.y)});
     ['pointerup','pointercancel','lostpointercapture'].forEach(evt=>canvas.addEventListener(evt,()=>{draw=false}));
 
     q('#fullscreenToggle').addEventListener('click',async()=>{
       try{
-        if(document.fullscreenElement){await document.exitFullscreen();q('#fullscreenToggle').textContent='⛶ ملء الشاشة';return}
-        if(game.requestFullscreen){await game.requestFullscreen();q('#fullscreenToggle').textContent='↙ تصغير';return}
-        toast('اللعبة بالفعل تغطي الشاشة؛ افتحي الرابط في Safari أو Chrome لأفضل تجربة')
-      }catch(e){toast('إذا ما اشتغل ملء الشاشة، مساحة اللعب تبقى كبيرة داخل المتصفح')}
+        if(document.fullscreenElement){await document.exitFullscreen();q('#fullscreenToggle').textContent=tt('Full screen','ملء الشاشة');return}
+        if(game.requestFullscreen){await game.requestFullscreen();q('#fullscreenToggle').textContent=tt('Exit full screen','تصغير');return}
+        toast(tt('The game already fills the screen. Use Safari or Chrome.','اللعبة تملأ الشاشة. استخدم Safari أو Chrome.'))
+      }catch(e){toast(tt('Full screen is not available in this browser','ملء الشاشة غير متاح في هذا المتصفح'))}
     });
-    document.addEventListener('fullscreenchange',()=>{q('#fullscreenToggle').textContent=document.fullscreenElement?'↙ تصغير':'⛶ ملء الشاشة'});
+    document.addEventListener('fullscreenchange',()=>{q('#fullscreenToggle').textContent=document.fullscreenElement?tt('Exit full screen','تصغير'):tt('Full screen','ملء الشاشة')});
     q('#goChase').addEventListener('click',()=>open('chase'));q('#goArt').addEventListener('click',()=>open('art'));q('#goPop').addEventListener('click',()=>open('pop'));q('#back').addEventListener('click',close);q('#restart').addEventListener('click',resetChase);q('#restartPop').addEventListener('click',resetPop);
-    q('#petType').addEventListener('change',()=>{q('#soundType').value=q('#petType').value==='cat'?'chirp':'squeak';toast('اختاري الصوت اللي يرتاح له أليفج')});
-    q('#soundEnable').addEventListener('click',()=>{soundOn=!soundOn;q('#soundEnable').textContent=soundOn?'🔊 الصوت شغال':'🔇 شغلي الصوت';if(soundOn){audioReady();playSound();lastAutoSound=performance.now();toast('بدينا بصوت خفيف — تحكمي بمستوى الجهاز')}});
+    q('#petType').addEventListener('change',()=>{q('#soundType').value=q('#petType').value==='cat'?'chirp':'squeak';toast(tt('Choose a sound your pet enjoys','اختر الصوت المناسب لأليفك'))});
+    q('#soundEnable').addEventListener('click',()=>{soundOn=!soundOn;q('#soundEnable').textContent=soundOn?tt('Sound on','الصوت شغال'):tt('Sound off','الصوت مغلق');if(soundOn){audioReady();playSound();lastAutoSound=performance.now();toast(tt('Start with a low volume','ابدأ بصوت منخفض'))}});
     q('#soundTest').addEventListener('click',()=>{audioReady();playSound(true)});
     q('#volume').addEventListener('input',()=>{q('#volumeValue').textContent=q('#volume').value+'%'});
     q('#colors').addEventListener('click',e=>{const b=e.target.closest('[data-color]');if(!b)return;color=b.dataset.color;q('#colors').querySelectorAll('.colorbutton').forEach(x=>x.classList.toggle('selected',x===b))});
-    q('#clearArt').addEventListener('click',()=>{marks=[];hits=0;score.textContent='اللمسات: 0';renderArt()});
-    q('#saveArt').addEventListener('click',()=>{if(mode!=='art')return;const a=document.createElement('a');a.download='PawArt-by-PawApp.png';a.href=canvas.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove();toast('تم تجهيز اللوحة للحفظ ✨')});
+    q('#clearArt').addEventListener('click',()=>{marks=[];hits=0;score.textContent=tt('Touches: 0','اللمسات: 0');renderArt()});
+    q('#saveArt').addEventListener('click',()=>{if(mode!=='art')return;const a=document.createElement('a');a.download='PawArt-by-PawApp.png';a.href=canvas.toDataURL('image/png');document.body.appendChild(a);a.click();a.remove();toast(tt('Artwork ready to save','اللوحة جاهزة للحفظ'))});
 
     // Pet ID campaign: optional product education AFTER leaving gameplay, never interrupt the pet.
     const iosStore='https://apps.apple.com/kw/app/paw-app/id6474899820';
@@ -386,7 +386,7 @@
     q('#downloadApp').addEventListener('click',()=>{
       const ua=navigator.userAgent||'';
       if(/iPhone|iPad|iPod/i.test(ua)){window.open(iosStore,'_blank','noopener,noreferrer')}
-      else if(/HUAWEI|HONOR|HarmonyOS|HMSCore/i.test(ua)){q('#storeChoice').hidden=false;q('#huaweiNote').hidden=false;toast('ألعاب PawPlay تشتغل من المتصفح — تحققي من متجر التطبيق على جهازج')}
+      else if(/HUAWEI|HONOR|HarmonyOS|HMSCore/i.test(ua)){q('#storeChoice').hidden=false;q('#huaweiNote').hidden=false;toast(tt('Games work in your browser. Check your device store for PawApp.','الألعاب تعمل بالمتصفح. تحقق من توفر تطبيق باو أب.'))}
       else if(/Android/i.test(ua)){window.open(androidStore,'_blank','noopener,noreferrer')}
       else{q('#storeChoice').hidden=false}
     });
@@ -407,9 +407,9 @@
       url.search='?utm_source=customer_share&utm_medium=whatsapp&utm_campaign=pawplay_gift';
       url.hash='';
       if(url.protocol==='file:'||url.hostname==='localhost'||url.hostname==='127.0.0.1'){
-        toast('رابط المشاركة مع العملاء يتفعّل بعد النشر على HTTPS');return;
+        toast(tt('Sharing requires a published HTTPS link','المشاركة تحتاج رابط HTTPS منشور'));return;
       }
-      const msg='🎁 هدية مجانية لأليفك من باو أب! جرب ٣ ألعاب مع دكتور بو 🐾 '+url.href+' #PawAppChallenge';
+      const msg=tt('Free games for your pet from PawApp! ','ألعاب مجانية لأليفك من باو أب! ')+url.href+' #PawPlayChallenge';
       try{
         if(navigator.share){await navigator.share({title:'Pop Up Play by PawApp',text:msg,url:url.href});return;}
       }catch(err){if(err.name==='AbortError')return;}
@@ -443,8 +443,8 @@
       cameraRecorder=null;stopCameraTracks();
     }
     function showVideoFile(file){
-      if(!file||(!file.type.startsWith('video/')&&!/\.(mp4|mov|webm|m4v)$/i.test(file.name))){cameraStatus('اختار فيديو صالح.');return;}
-      if(file.size>85*1024*1024){cameraStatus('الفيديو كبير. جرّب مقطع أقصر من 20 ثانية.');return;}
+      if(!file||(!file.type.startsWith('video/')&&!/\.(mp4|mov|webm|m4v)$/i.test(file.name))){cameraStatus(tt('Choose a valid video.','اختر فيديو صالحًا.'));return;}
+      if(file.size>85*1024*1024){cameraStatus(tt('This video is too large. Try a shorter clip.','الفيديو كبير. جرب مقطعًا أقصر.'));return;}
       clearCameraTimer();stopCameraTracks();
       cameraFile=file;
       cameraRecorded.pause();
@@ -455,7 +455,7 @@
       const previewReady=()=>{loading.hidden=true;};
       cameraRecorded.onloadedmetadata=()=>{try{if(cameraRecorded.duration>.05)cameraRecorded.currentTime=.05;}catch(e){}previewReady();};
       cameraRecorded.onloadeddata=previewReady;
-      cameraRecorded.onerror=()=>{previewReady();cameraStatus('Preview unavailable in this browser. Try playing the video or choose another.');};
+      cameraRecorded.onerror=()=>{previewReady();cameraStatus(tt('Preview unavailable. Try another video.','المعاينة غير متاحة. جرب فيديو آخر.'));};
       cameraRecorded.load();
       setTimeout(()=>{if(cameraStage==='review')loading.hidden=true;},6500);
       cameraStageSet('review');cameraStatus('');
@@ -479,12 +479,12 @@
     }
     async function startDesktopRecording(){
       if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
-        cameraStatus('الكاميرا المباشرة غير مدعومة؛ اختار الفيديو من الجهاز.');
+        cameraStatus(tt('Use your device camera instead.','استخدم كاميرا جهازك.'));
         launchNativeCamera();return;
       }
       const session=++cameraSession;
       try{
-        cameraStatus('اسمح للمتصفح باستخدام الكاميرا.');
+        cameraStatus(tt('Allow camera access.','اسمح بالوصول إلى الكاميرا.'));
         let stream;
         try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:true});}
         catch(e){stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});}
@@ -505,9 +505,9 @@
           if(blob.size>0){
             const ext=finalMime.includes('mp4')?'mp4':'webm';
             showVideoFile(new File([blob],'pawplay-challenge.'+ext,{type:finalMime}));
-          }else{cameraStageSet('idle');cameraStatus('ما قدرنا نحفظ الفيديو. حاول مرة ثانية.');}
+          }else{cameraStageSet('idle');cameraStatus(tt('Could not save this video. Try again.','تعذر حفظ الفيديو. حاول مجددًا.'));}
         };
-        recorder.onerror=()=>cameraStatus('صار خطأ بالتسجيل. حاول مرة ثانية.');
+        recorder.onerror=()=>cameraStatus(tt('Recording error. Try again.','حدث خطأ بالتسجيل. حاول مجددًا.'));
         cameraRecorded.pause();cameraRecorded.hidden=true;
         cameraLive.hidden=false;ca('#cameraPlaceholder').hidden=true;
         cameraLive.srcObject=stream;
@@ -521,28 +521,28 @@
       }catch(e){
         if(session!==cameraSession)return;
         stopCameraTracks();cameraStageSet('idle');
-        cameraStatus('تعذر فتح الكاميرا. يمكنك اختيار فيديو من الجهاز.');
+        cameraStatus(tt('Camera unavailable. Choose an existing video.','الكاميرا غير متاحة. اختر فيديو موجودًا.'));
         // Native chooser is not auto-opened after an async permission error.
-        primary.textContent='اختيار فيديو';
+        primary.textContent=tt('Choose video','اختر فيديو');
       }
     }
     function stopDesktopRecording(){
-      if(cameraRecorder?.state==='recording'){cameraStatus('جاري تجهيز الفيديو…');cameraRecorder.stop();}
+      if(cameraRecorder?.state==='recording'){cameraStatus(tt('Preparing video…','جاري تجهيز الفيديو…'));cameraRecorder.stop();}
     }
     async function sendToBusiness(){
-      if(!cameraFile){cameraStatus('Record or select a video first.');return;}
+      if(!cameraFile){cameraStatus(tt('Record or choose a video first.','صوّر أو اختر فيديو أولًا.'));return;}
       // The Web Share API shares the actual video file. Recipient selection stays in WhatsApp.
       // A wa.me contact link cannot attach a media file.
       fallback.hidden=true;
       try{
         if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[cameraFile]}))){
           await navigator.share({files:[cameraFile],title:'PawPlay Challenge by PawApp'});
-          cameraStatus('Choose WhatsApp, then PawApp (+965 41117003), and press Send.');
+          cameraStatus(tt('Choose WhatsApp, then PawApp (+965 41117003), and tap Send.','اختر واتساب ثم PawApp (+965 41117003) واضغط إرسال.'));
           return;
         }
       }catch(err){if(err?.name==='AbortError')return;}
       fallback.hidden=false;
-      cameraStatus('Video file sharing is not available here. Save and attach the video in our WhatsApp chat.');
+      cameraStatus(tt('Save the video, then attach it in our WhatsApp chat.','احفظ الفيديو ثم أرفقه في محادثة واتساب باو أب.'));
     }
     ca('#cameraSave').addEventListener('click',()=>{
       if(!cameraFile)return;
