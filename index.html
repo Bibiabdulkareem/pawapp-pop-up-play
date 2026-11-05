@@ -292,7 +292,6 @@
       <input id="cameraExternal" type="file" accept="video/*" hidden />
       <div id="cameraFallback" class="camera-fallback" hidden><span id="cameraFallbackText">Can’t share the file here? Save it, then attach it in our WhatsApp chat.</span><button type="button" id="cameraSave" class="camera-secondary">Save video</button><a class="camera-secondary" href="https://wa.me/96541117003?text=PawPlay%20Challenge" id="cameraChat">Open PawApp WhatsApp</a></div>
       <p class="camera-hint" id="cameraHint">Preview your video before sharing.</p>
-      <a class="camera-direct-link" id="cameraDirectChat" href="https://wa.me/96541117003" hidden>Open PawApp chat (attach video manually)</a>
       <p class="camera-consent">إرسال الفيديو لا يعني الموافقة على نشره. نطلب الإذن قبل استخدامه بالإعلانات.</p>
     </div>
   </div>
@@ -476,9 +475,8 @@
     function cameraStageSet(stage){
       cameraStage=stage;
       secondary.hidden=stage!=='review';choose.hidden=stage==='review'||stage==='recording';fallback.hidden=true;
-      ca('#cameraDirectChat').hidden=stage!=='review';
-      primary.textContent=stage==='review'?tt('Share video → choose PawApp','شارك الفيديو ← اختاري باو أب'):stage==='recording'?tt('Stop recording','إيقاف التسجيل'):tt('Record video','صوّر فيديو');
-      ca('#cameraHint').textContent=stage==='review'?tt('In WhatsApp, search PawApp +965 41117003 — not Message Yourself.','في واتساب ابحث عن PawApp +965 41117003، مو محادثتك مع نفسك.'):stage==='recording'?tt('Stop or finish after 20 seconds.','أوقف التسجيل أو ينتهي بعد 20 ثانية.'):tt('Preview before sharing.','شاهد الفيديو قبل المشاركة.');
+      primary.textContent=stage==='review'?tt('WhatsApp PawApp','واتساب باو أب'):stage==='recording'?tt('Stop recording','إيقاف التسجيل'):tt('Record video','صوّر فيديو');
+      ca('#cameraHint').textContent=stage==='review'?tt('Opens PawApp chat. Attach your video there.','يفتح محادثة باو أب. أرفق الفيديو هناك.'):stage==='recording'?tt('Stop or finish after 20 seconds.','أوقف التسجيل أو ينتهي بعد 20 ثانية.'):tt('Preview before sharing.','شاهد الفيديو قبل المشاركة.');
       ca('#cameraRecordingTag').hidden=stage!=='recording';
     }
     function stopCameraTracks(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}cameraLive.srcObject=null;}
@@ -584,29 +582,16 @@
     }
     function updateBusinessChatLinks(){
       const link='https://wa.me/'+PAWAPP_WHATSAPP_NUMBER+'?text='+encodeURIComponent(pawPlayCaption());
-      ca('#cameraDirectChat').href=link;
       ca('#cameraChat').href=link;
-      ca('#cameraDirectChat').textContent=tt('Open PawApp chat (attach video manually)','افتح محادثة باو أب (أرفق الفيديو بنفسك)');
     }
-    async function sendToBusiness(){
+    function sendToBusiness(){
       if(!cameraFile){cameraStatus(tt('Record or choose a video first.','صوّر أو اختر فيديو أولًا.'));return;}
-      // Share the video FILE plus the original challenge caption, not a text-only link.
-      // WhatsApp decides the recipient after the user selects a chat; a web site cannot preselect it.
-      fallback.hidden=true;
-      cameraStatus(tt('Select PawApp (+965 41117003) as the recipient in WhatsApp.','في واتساب اختاري PawApp (+965 41117003) كمستلم.'));
-      try{
-        if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[cameraFile]}))){
-          await navigator.share({
-            files:[cameraFile],
-            title:'PawPlay Challenge by PawApp',
-            text:pawPlayCaption()
-          });
-          cameraStatus(tt('The share menu closed. Confirm the video was sent to PawApp in WhatsApp.','انغلقت شاشة المشاركة. تأكد إن الفيديو انرسل لمحادثة باو أب في واتساب.'));
-          return;
-        }
-      }catch(err){if(err?.name==='AbortError')return;}
-      fallback.hidden=false;
-      cameraStatus(tt('Sharing video files is unavailable. Save the clip and attach it to PawApp WhatsApp.','مشاركة ملفات الفيديو غير متاحة. احفظ المقطع وأرفقه في واتساب باو أب.'));
+      // WhatsApp click-to-chat opens the exact business chat. It does NOT attach media or send messages.
+      // The file remains in this tab for preview if the visitor returns from WhatsApp.
+      const url='https://wa.me/'+PAWAPP_WHATSAPP_NUMBER+'?text='+encodeURIComponent(pawPlayCaption());
+      cameraStatus(tt('Opening PawApp WhatsApp. Attach your video and tap Send.','جاري فتح واتساب باو أب. أرفق الفيديو واضغط إرسال.'));
+      const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.style.display='none';
+      document.body.appendChild(a);a.click();a.remove();
     }
     ca('#cameraSave').addEventListener('click',()=>{
       if(!cameraFile)return;
